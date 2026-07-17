@@ -45,6 +45,11 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            # A file newly brought under home.file (e.g. .zshrc, .gitconfig)
+            # collides with the real, pre-existing plain file on the first
+            # switch that manages it - back it up instead of hard-failing
+            # the whole activation.
+            home-manager.backupFileExtension = "backup";
             home-manager.extraSpecialArgs = {
               inherit user personalDotfilesDir;
               treehousePackage = treehouse.packages.${system}.default;
