@@ -41,6 +41,24 @@ nix build .#darwinConfigurations.mac.system --dry-run
 - `home/` - the actual config files that get symlinked into place (nvim,
   tmux, iTerm2 profile, Claude statusline, zsh fragment, etc).
 
+## Updating the neovim config
+
+`home/config/nvim` (ajisrael's kickstart.nvim fork) is a git submodule with
+its own independent history, not vendored content - commits made in that
+repo don't show up here until the submodule pointer is bumped. To pull its
+latest work into this repo:
+
+```sh
+cd home/config/nvim
+git pull origin master
+cd ../../..
+git add home/config/nvim
+git commit -m "Update nvim submodule pointer"
+```
+
+The second commit only records which submodule commit this repo points at -
+it never rewrites the submodule's own history.
+
 ## Notes on this machine
 
 - This machine is Intel (`x86_64-darwin`) on macOS Ventura (13.7.8).
