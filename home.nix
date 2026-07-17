@@ -113,6 +113,12 @@ in
   home.file.".claude/statusline-command.sh".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/claude/statusline-command.sh";
 
+  # Same dangling-after-rename problem as statusline-command.sh above -
+  # ~/.config/nvim was a manually-created symlink still pointing at the
+  # deleted dotfiles-personal path.
+  home.file.".config/nvim".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/nvim";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -
@@ -126,9 +132,8 @@ in
     nix-direnv.enable = true;
   };
 
-  # Single-owner personal symlinks (nvim, tmux, iTerm2 profile, statusline,
-  # zsh/ssh/git fragments) get added here in Phase 4, once the real files
-  # move into this repo's home/ tree.
+  # Remaining single-owner personal symlinks (iTerm2 profile) get added
+  # here in Phase 4, once the real files move into this repo's home/ tree.
 
   # sdkman has no Nix or Homebrew package (install-method priority for this
   # machine is Nix, then Homebrew, then curl/native last) - bootstrap it on
