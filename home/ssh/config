@@ -1,0 +1,5 @@
+Host github.personal
+    HostName github.com
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/mtu_github
+    IdentitiesOnly yes
