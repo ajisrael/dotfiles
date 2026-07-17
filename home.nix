@@ -92,6 +92,27 @@ in
     source = "${pkgs.python313}/bin/python3";
   };
 
+  # zsh/tmux/git/ssh - tracked here so a fresh clone + darwin-rebuild switch
+  # reproduces them exactly, instead of relying on hand-edits that silently
+  # go stale (as happened to all four across the dotfiles-personal ->
+  # dotfiles / dotfiles-work -> dotfiles-amway rename). Still deliberately
+  # NOT using home-manager's own programs.zsh/programs.git/programs.ssh
+  # modules - same reasoning as the comment below about not fighting the
+  # existing oh-my-zsh + Powerlevel10k setup.
+  home.file.".zshrc".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zshrc";
+  home.file.".tmux.conf".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/tmux.conf";
+  home.file.".gitconfig".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/git/gitconfig";
+  home.file.".ssh/config".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/ssh/rootconfig";
+
+  # Was dangling at the deleted dotfiles-personal path after the rename -
+  # not previously declared here at all, just a manually-created symlink.
+  home.file.".claude/statusline-command.sh".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/claude/statusline-command.sh";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -

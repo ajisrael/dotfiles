@@ -1,0 +1,23 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+# Fallback identity for anything outside ~/learning/ and ~/work/ (matches
+# the work identity, same as before this file was split).
+[user]
+	name = Alex Israels
+	email = Alex.Israels@Amway.com
+
+[includeIf "gitdir:~/learning/"]
+	path = ~/dotfiles/home/git/personal.gitconfig
+[includeIf "gitdir:~/work/"]
+	path = ~/dotfiles-amway/home/git/work.gitconfig
+
+[fem]
+	dev = is amazing!
+[init]
+	defaultBranch = main
+[core]
+	excludesFile = ~/dotfiles/home/git/gitignore_global
