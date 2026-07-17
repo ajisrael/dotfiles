@@ -119,6 +119,11 @@ in
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/nvim";
 
+  # Same dangling-after-rename problem again - iTerm2's DynamicProfiles
+  # symlink still pointed at the deleted dotfiles-personal path.
+  home.file."Library/Application Support/iTerm2/DynamicProfiles/tokyonight-pkmn.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/iterm2/tokyonight-pkmn.json";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -
@@ -131,9 +136,6 @@ in
     enable = true;
     nix-direnv.enable = true;
   };
-
-  # Remaining single-owner personal symlinks (iTerm2 profile) get added
-  # here in Phase 4, once the real files move into this repo's home/ tree.
 
   # sdkman has no Nix or Homebrew package (install-method priority for this
   # machine is Nix, then Homebrew, then curl/native last) - bootstrap it on
