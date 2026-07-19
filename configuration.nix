@@ -63,7 +63,12 @@
     enable = true;
     onActivation.cleanup = "none";
     onActivation.autoUpdate = true;
-    brews = [ "nvm" "mongocli" ];
+    # podman: Docker replacement. Its macOS VM backend (`podman machine`)
+    # needs a codesigned virtualization entitlement to launch the VM -
+    # Homebrew's formula handles that signing step; a plain nixpkgs-built
+    # binary on Darwin does not, so this stays on the Homebrew tier
+    # rather than moving to home.packages like the old `docker` package.
+    brews = [ "nvm" "mongocli" "podman" ];
     # GUI .app bundles stay on Homebrew casks (tier 2) for proper
     # /Applications integration, Spotlight visibility, and auto-update
     # behavior, even where a same-named nixpkgs package exists (e.g.
@@ -90,11 +95,14 @@
       # that's a runtime setting, not something this cask declaration can set.
       "handy"
 
-      # docker-desktop and windows-app both hard-require macOS >= 14
-      # (Sonoma); this machine is on Ventura (13.7.8). Both failed during
-      # the first switch attempt with "This cask does not run on macOS
-      # versions older than Sonoma." Re-add once the OS is upgraded - see
-      # ~/dev-env-followups.md.
+      # windows-app hard-requires macOS >= 14 (Sonoma); this machine is on
+      # Ventura (13.7.8) and failed during the first switch attempt with
+      # "This cask does not run on macOS versions older than Sonoma."
+      # Re-add once the OS is upgraded - see ~/dev-env-followups.md.
+      #
+      # docker-desktop is deliberately NOT here even though it would now
+      # install - podman (above) replaces it entirely (CLI, VM, and socket)
+      # without Docker Desktop's commercial-use subscription requirement.
     ];
   };
 }

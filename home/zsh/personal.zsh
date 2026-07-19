@@ -73,4 +73,13 @@ export PATH="$HOME/.opencode/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-export PATH=$PATH:/Applications/Docker.app/Contents/Resources/bin
+# Podman replacement for Docker Desktop (see home.nix/configuration.nix
+# for the package/launchd side). Points anything that talks to the Docker
+# Engine API directly (Testcontainers, CDK's local emulation, etc.) at the
+# rootless podman machine's socket - the docker/docker-compose CLI shims
+# in home.nix don't need this, they just exec podman directly.
+if command -v podman >/dev/null 2>&1; then
+  _podman_socket="$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)"
+  [ -n "$_podman_socket" ] && export DOCKER_HOST="unix://$_podman_socket"
+  unset _podman_socket
+fi
