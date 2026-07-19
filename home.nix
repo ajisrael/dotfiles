@@ -12,6 +12,19 @@ let
   # under it unconditionally. Redirect global installs to a writable,
   # stable location instead.
   npmGlobalPrefix = "${config.home.homeDirectory}/.npm-global";
+
+  # `docker`/`docker-compose` shims onto `podman`/`podman compose` - podman
+  # itself lives on the Homebrew tier (see configuration.nix) rather than
+  # here, but this keeps anything that shells out to a literal `docker`
+  # binary (CDK's asset bundling, scripts, muscle memory) working
+  # unchanged. Podman's CLI is Docker-API-compatible, so this is a
+  # transparent rename rather than a behavior shim.
+  dockerShim = pkgs.writeShellScriptBin "docker" ''
+    exec podman "$@"
+  '';
+  dockerComposeShim = pkgs.writeShellScriptBin "docker-compose" ''
+    exec podman compose "$@"
+  '';
 in
 
 {
@@ -27,6 +40,9 @@ in
     jq
     lazygit
     lazydocker
+    podman-compose
+    dockerShim
+    dockerComposeShim
     neovim
     tmux
     tree
@@ -42,7 +58,6 @@ in
     awscli2
     cloudflared
     cmake
-    docker
     gh
     git
     gnused
@@ -186,6 +201,34 @@ in
       KeepAlive = true;
       StandardOutPath = "${config.home.homeDirectory}/Library/Logs/no-mistakes/daemon.out.log";
       StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/no-mistakes/daemon.err.log";
+    };
+  };
+
+  # Starts the rootless podman machine VM on login, replacing Docker
+  # Desktop's auto-launched VM. `podman machine start` exits nonzero if the
+  # machine is already running (e.g. after a fast logout/login or a second
+  # activation) - `|| true` swallows that so this activation step, and any
+  # later home-manager switch, stays idempotent. No KeepAlive: unlike
+  # no-mistakes-daemon below, this launches a VM process that supervises
+  # itself, it isn't a long-running foreground process for launchd to
+  # restart. Requires `podman machine init` to have been run once by hand
+  # first (creates the VM/downloads its image) - not declarative-friendly,
+  # so it isn't done here. Hardcoded /usr/local/bin (not
+  # config.homebrew.brewPrefix - that option lives on the nix-darwin
+  # config, not this home-manager one) matching this machine's pre-existing
+  # Intel Homebrew prefix - see configuration.nix's nix-homebrew.autoMigrate
+  # comment.
+  launchd.agents.podman-machine-start = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        "${pkgs.bash}/bin/bash"
+        "-c"
+        "/usr/local/bin/podman machine start || true"
+      ];
+      RunAtLoad = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/podman-machine-start.out.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/podman-machine-start.err.log";
     };
   };
 
