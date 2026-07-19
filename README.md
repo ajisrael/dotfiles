@@ -33,6 +33,39 @@ nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
 ```
 
+## Pruning old generations
+
+Every `./rebuild.sh` creates a new system generation without removing the
+old one - each is a full closure, so they accumulate disk usage over time.
+`prune.sh` keeps the last 10 system and home-manager generations and
+garbage-collects everything else:
+
+```sh
+sudo ./prune.sh
+```
+
+It needs root because `/nix/var/nix/profiles/system` is owned by root on
+this machine's classic multi-user Nix install (see the `nix.enable = false`
+note below for why nix-darwin isn't the one managing that daemon).
+
+To run it automatically instead of remembering to invoke it by hand, add a
+root cron job:
+
+```sh
+sudo crontab -e
+```
+
+Add a line like this (runs weekly, Sunday at 3am; adjust the path to match
+where you cloned this repo):
+
+```
+0 3 * * 0 /Users/<you>/dotfiles/prune.sh >> /var/log/nix-prune.log 2>&1
+```
+
+Verify it's installed with `sudo crontab -l`. Check `/var/log/nix-prune.log`
+after the first scheduled run to confirm it actually freed space
+(`nix-collect-garbage`'s own output reports how much).
+
 ## Repo tour
 
 - `flake.nix` - entry point. Wires up nixpkgs, nix-darwin, home-manager.
@@ -40,6 +73,8 @@ nix build .#darwinConfigurations.mac.system --dry-run
 - `home.nix` - user-level config: packages, PATH, activation scripts.
 - `home/` - the actual config files that get symlinked into place (nvim,
   tmux, iTerm2 profile, Claude statusline, zsh fragment, etc).
+- `prune.sh` - deletes old system/home-manager generations and garbage
+  collects the store (see "Pruning old generations" above).
 
 ## Updating the neovim config
 
