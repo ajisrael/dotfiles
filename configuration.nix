@@ -63,12 +63,7 @@
     enable = true;
     onActivation.cleanup = "none";
     onActivation.autoUpdate = true;
-    # podman: Docker replacement. Its macOS VM backend (`podman machine`)
-    # needs a codesigned virtualization entitlement to launch the VM -
-    # Homebrew's formula handles that signing step; a plain nixpkgs-built
-    # binary on Darwin does not, so this stays on the Homebrew tier
-    # rather than moving to home.packages like the old `docker` package.
-    brews = [ "nvm" "mongocli" "podman" ];
+    brews = [ "nvm" "mongocli" ];
     # GUI .app bundles stay on Homebrew casks (tier 2) for proper
     # /Applications integration, Spotlight visibility, and auto-update
     # behavior, even where a same-named nixpkgs package exists (e.g.
@@ -100,9 +95,13 @@
       # "This cask does not run on macOS versions older than Sonoma."
       # Re-add once the OS is upgraded - see ~/dev-env-followups.md.
       #
-      # docker-desktop is deliberately NOT here even though it would now
-      # install - podman (above) replaces it entirely (CLI, VM, and socket)
-      # without Docker Desktop's commercial-use subscription requirement.
+      # docker-desktop is deliberately NOT here - podman replaces it entirely
+      # (CLI, VM, and socket) without Docker Desktop's commercial-use
+      # subscription requirement. podman itself isn't declared here either:
+      # its current (6.x) Homebrew formula requires arm64 (Intel Mac support
+      # was dropped upstream), so it's pinned to the last Intel-compatible
+      # version via home.nix's installPodman activation script instead - see
+      # home/skills/install-podman.sh for the detail.
     ];
   };
 }

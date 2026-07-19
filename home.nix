@@ -204,6 +204,15 @@ in
     };
   };
 
+  # podman itself isn't in configuration.nix's homebrew.brews - the current
+  # (6.x) tap formula requires arm64, a hard wall on this Intel machine (see
+  # that file's comment). Installs and pins the last Intel-compatible
+  # version instead, same tier-3 (curl/imperative) pattern as
+  # installSdkman/installPlash above.
+  home.activation.installPodman = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD ${pkgs.bash}/bin/bash "${dotfiles}/home/skills/install-podman.sh"
+  '';
+
   # Starts the rootless podman machine VM on login, replacing Docker
   # Desktop's auto-launched VM. `podman machine start` exits nonzero if the
   # machine is already running (e.g. after a fast logout/login or a second
