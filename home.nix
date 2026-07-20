@@ -77,6 +77,10 @@ in
     treehousePackage
     no-mistakes
 
+    # CLI for Architecture Decision Records (numbering, status/supersede
+    # links, TOC generation) - paired with the `adr` skill below.
+    adr-tools
+
     # Single source of truth for Python (was 4+ overlapping installs:
     # native python.org 3.8 + 3.13, four Homebrew python@ formulae, plus
     # the Apple/Xcode stub at /usr/bin/python3). `python` -> `python3` via
@@ -294,6 +298,16 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/no-mistakes/SKILL.md";
   home.file.".agents/skills/no-mistakes/SKILL.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/no-mistakes/SKILL.md";
+
+  # Architecture Decision Records - hand-authored skill (not synced from an
+  # npm package like the axi family above), paired with the adr-tools
+  # package. Templates live alongside SKILL.md and are referenced by path
+  # from within it, so symlink the whole skill directory rather than just
+  # the one file.
+  home.file.".claude/skills/adr".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/adr";
+  home.file.".agents/skills/adr".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/adr";
 
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
   # canonical file, symlinked to every harness's expected location.
