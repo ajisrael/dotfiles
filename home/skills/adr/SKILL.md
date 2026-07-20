@@ -7,7 +7,7 @@ user-invocable: true
 # adr
 
 `adr` (npryce/adr-tools) manages a numbered log of Architecture Decision
-Records - one markdown file per decision, in `doc/adr/` by default. It is
+Records - one markdown file per decision, in `docs/adr/` by default. It is
 project-scoped, not machine-global: each repo gets its own log the first
 time this skill is used in it.
 
@@ -32,22 +32,25 @@ log it in AGENTS.md/CLAUDE.md instead, or skip logging entirely.
 
 ## Setup (once per repo)
 
+Check for an existing ADR log first - a `.adr-dir` file, or a `doc/adr/`
+or `docs/adr/` directory already in the repo - and use that location
+instead if one exists. Only when none exists:
+
 ```sh
-adr init doc/adr
+adr init docs/adr
 ```
 
-Creates `doc/adr/0001-record-architecture-decisions.md` (the standard
+Creates `docs/adr/0001-record-architecture-decisions.md` (the standard
 first ADR explaining that ADRs are in use) and remembers the directory in
-`.adr-dir`. Skip this if `doc/adr/` (or another dir recorded in
-`.adr-dir`) already exists.
+`.adr-dir`.
 
 Then drop the Nygard template in as the repo's *default* - `adr new` uses
 `<adr-dir>/templates/template.md` automatically when present, without any
 flag:
 
 ```sh
-mkdir -p doc/adr/templates
-cp ~/.claude/skills/adr/templates/nygard.md doc/adr/templates/template.md
+mkdir -p docs/adr/templates
+cp ~/.claude/skills/adr/templates/nygard.md docs/adr/templates/template.md
 ```
 
 (The MADR template lives alongside it at
@@ -107,5 +110,5 @@ if it turns out wrong - supersede it with a new one that explains why.
 
 ```sh
 adr list              # every ADR in the log
-adr generate toc       # table of contents (pipe to doc/adr/README.md if wanted)
+adr generate toc       # table of contents (pipe to docs/adr/README.md if wanted)
 ```
