@@ -10,4 +10,4 @@ if [[ ! -f "$default_config" ]]; then
 fi
 
 cp "$default_config" "$target"
-vim "$target"
+nvim "$target"
