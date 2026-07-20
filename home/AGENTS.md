@@ -51,3 +51,8 @@
   has grown enough that a topic should be split into its own doc (like
   `~/.agents/instructions/INSTALLATIONS.md`) and linked from here instead of
   inlined.
+- Not every discovery belongs here, though. A decision that's architectural
+  (a hard-to-reverse choice about structure, a dependency, a data model, an
+  API boundary) - especially one that came out of weighing real
+  alternatives - belongs in that repo's ADR log instead of this file. See
+  the `adr` skill for when and how.
