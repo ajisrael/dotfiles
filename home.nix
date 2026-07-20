@@ -330,4 +330,12 @@ in
     $DRY_RUN_CMD mkdir -p "$HOME/.agents/instructions"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/instructions/INSTALLATIONS.md" "$HOME/.agents/instructions/INSTALLATIONS.md"
   '';
+
+  # Referenced by home/AGENTS.md's commit-conventions pointer - same
+  # load-on-demand reasoning as installInstallations above: only paid for
+  # when an agent is actually about to write a commit message.
+  home.activation.installCommitConventions = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p "$HOME/.agents/instructions"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/instructions/COMMITS.md" "$HOME/.agents/instructions/COMMITS.md"
+  '';
 }

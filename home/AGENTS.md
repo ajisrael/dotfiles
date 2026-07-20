@@ -1,7 +1,6 @@
 # global agent instructions
 
 - Never use the em dash "—". Use plain dash "-" instead
-- When writing commit messages, NEVER auto-add your agent name as co-author
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
 - When making technical decisions, do not give much weight to development cost.
   Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
@@ -18,6 +17,14 @@
   language runtime available system-wide - not a project-local install like
   `npm install` inside a repo), read `~/.agents/instructions/INSTALLATIONS.md`
   and follow its install-method priority order.
+
+## Commits
+
+- NEVER auto-add your agent name as co-author.
+- Before writing a commit message, read
+  `~/.agents/instructions/COMMITS.md` and follow it: use the project's own
+  commit convention if it has one, otherwise fall back to the default
+  format described there.
 
 ## Generated files - edit the source, not the output
 
