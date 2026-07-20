@@ -9,10 +9,8 @@ if [[ ! -f "$default_config" ]]; then
 	exit 1
 fi
 
-if [[ -f "$target" ]]; then
-	echo "Config already exists: $target" >&2
-	exit 1
+if [[ ! -f "$target" ]]; then
+	cp "$default_config" "$target"
 fi
 
-cp "$default_config" "$target"
 nvim "$target"
