@@ -11,6 +11,26 @@
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 
+## Local clones of referenced repositories
+
+Documents (ADRs, plans, PR descriptions) reference repositories the way a
+human would - a GitHub URL or `org/repo` name - so they stay meaningful
+outside this machine. But most of those repos also have a local clone
+here, which is faster and doesn't burn API calls: prefer reading the local
+clone over `gh`/`WebFetch`/the GitHub API whenever one exists.
+
+- **`~/work/<repo>`** - every `AmwayCommon/<repo>` GitHub repository has (or
+  should have) a matching local clone here, same name. Before fetching an
+  `AmwayCommon/*` repo remotely, check `~/work/<repo>` first.
+- **`~/examples/<repo>`** - open-source or third-party repos cloned for
+  reference (e.g. a dependency's source, a tool being evaluated). Before
+  fetching a public repo remotely for reference, check here too, and if a
+  repo you keep needing isn't there yet, clone it in rather than
+  re-fetching it repeatedly.
+- Neither directory is guaranteed exhaustive or up to date - if a repo
+  isn't present, or the local clone looks stale for what you need, fall
+  back to `gh`/the GitHub API/`WebFetch` normally.
+
 ## Installation
 
 - Before installing anything globally on this machine (a CLI tool, GUI app, or
