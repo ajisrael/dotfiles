@@ -45,6 +45,27 @@ if [[ -n "$TMUX" ]]; then
   add-zsh-hook precmd _tmux_rename_precmd
 fi
 
+# Auto-switch node version on cd, like the oh-my-zsh nvm plugin's
+# load-nvmrc, but without eagerly sourcing nvm.sh: nvm/zprofile lazy-loads
+# nvm.sh on first real use to keep shell startup fast, and calling
+# `nvm use` unconditionally on every cd would defeat that. So walk up from
+# $PWD looking for a .nvmrc in plain shell first, and only invoke the
+# (lazy-loading) `nvm` shim - which pays the one-time load cost - when one
+# is actually found.
+__nvmrc_hook() {
+  local dir="$PWD"
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/.nvmrc" ]]; then
+      nvm use --silent
+      return
+    fi
+    dir="${dir%/*}"
+  done
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd __nvmrc_hook
+__nvmrc_hook
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
