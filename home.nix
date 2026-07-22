@@ -120,6 +120,11 @@ in
   # setup.
   home.file.".zshrc".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zshrc";
+  # Was a plain untracked file (not a symlink) until the nvm lazy-load
+  # helper's naming bug (see home/zsh/zprofile's own comment) surfaced that
+  # a fresh machine would silently not get this lazy-load at all.
+  home.file.".zprofile".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zprofile";
   home.file.".tmux.conf".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/tmux.conf";
   home.file.".hammerspoon/init.lua".source =
