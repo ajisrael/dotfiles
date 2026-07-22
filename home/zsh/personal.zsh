@@ -49,22 +49,34 @@ fi
 # load-nvmrc, but without eagerly sourcing nvm.sh: nvm/zprofile lazy-loads
 # nvm.sh on first real use to keep shell startup fast, and calling
 # `nvm use` unconditionally on every cd would defeat that. So walk up from
-# $PWD looking for a .nvmrc in plain shell first, and only invoke the
-# (lazy-loading) `nvm` shim - which pays the one-time load cost - when one
-# is actually found.
-__nvmrc_hook() {
-  local dir="$PWD"
+# a directory looking for a .nvmrc in plain shell first (no nvm call, so
+# no forced load), and only invoke the (lazy-loading) `nvm` shim - which
+# pays the one-time load cost - when we actually need to switch/revert.
+__find_nvmrc() {
+  local dir="$1"
   # Loop on dir != "" (matching nvm's own nvm_find_up), not dir != "/":
   # `${dir%/*}` on a single-segment path like "/Users" collapses straight
   # to "" rather than "/", so terminating on "/" never triggers and this
   # spins forever - hanging every `cd ..` once it walks above such a path.
   while [[ -n "$dir" ]]; do
-    if [[ -f "$dir/.nvmrc" ]]; then
-      nvm use --silent
-      return
-    fi
+    [[ -f "$dir/.nvmrc" ]] && return 0
     dir="${dir%/*}"
   done
+  return 1
+}
+__nvmrc_hook() {
+  if __find_nvmrc "$PWD"; then
+    nvm use --silent
+  elif __find_nvmrc "${OLDPWD:-}"; then
+    # Leaving a directory (tree) that had its own .nvmrc for one that
+    # doesn't: revert to the default version, same as the oh-my-zsh
+    # plugin does. Only bother if nvm has already been loaded in this
+    # shell - if it hasn't, the version was never switched away from
+    # default in the first place, so there's nothing to revert and no
+    # reason to force the lazy load just to check.
+    (( $+functions[__load_nvm] )) && return
+    [[ "$(nvm version)" != "$(nvm version default)" ]] && nvm use default --silent
+  fi
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook chpwd __nvmrc_hook
