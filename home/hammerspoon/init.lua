@@ -13,9 +13,9 @@ local function isSleepDisabled()
 end
 
 local function updateMenuIcon(disabled)
-  -- Filled moon = sleep disabled (awake-while-closed active), outline = normal.
+  -- Rocket = sleep disabled (awake-while-closed active), moon = normal.
   sleepDisableMenu:setIcon(nil)
-  sleepDisableMenu:setTitle(disabled and "🌙" or "🌑")
+  sleepDisableMenu:setTitle(disabled and "🚀" or "🌙")
   sleepDisableMenu:setTooltip(disabled
     and "Lid-close sleep: DISABLED (lid can be closed, machine stays awake)"
     or "Lid-close sleep: normal")
