@@ -113,11 +113,11 @@ in
 
   # zsh/tmux/git/ssh - tracked here so a fresh clone + darwin-rebuild switch
   # reproduces them exactly, instead of relying on hand-edits that silently
-  # go stale (as happened to all four across the dotfiles-personal ->
-  # dotfiles / dotfiles-work -> dotfiles-amway rename). Still deliberately
-  # NOT using home-manager's own programs.zsh/programs.git/programs.ssh
-  # modules - same reasoning as the comment below about not fighting the
-  # existing oh-my-zsh + Powerlevel10k setup.
+  # go stale (as happened to all four across a prior repo rename). Still
+  # deliberately NOT using home-manager's own
+  # programs.zsh/programs.git/programs.ssh modules - same reasoning as the
+  # comment below about not fighting the existing oh-my-zsh + Powerlevel10k
+  # setup.
   home.file.".zshrc".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zshrc";
   home.file.".tmux.conf".source =
@@ -314,10 +314,10 @@ in
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
   # canonical file, symlinked to every harness's expected location. A
   # plain live symlink via home.activation (not home.file) - same
-  # reasoning as installInstallations below: a downstream config
-  # (dotfiles-amway's mergeAgents) overwrites these same three paths with
-  # its own merged file on every rebuild, and a home.file entry here would
-  # make home-manager think it owns that path, triggering its
+  # reasoning as installInstallations below: a downstream work-specific
+  # profile repo may overwrite these same three paths with its own merged
+  # file on every rebuild, and a home.file entry here would make
+  # home-manager think it owns that path, triggering its
   # backupFileExtension logic against content it didn't actually write -
   # which fails outright once a stale .backup from a prior rebuild is
   # already sitting there. entryAfter "writeBoundary" only, so any
