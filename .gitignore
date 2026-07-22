@@ -1,0 +1,12 @@
+# Vault password - decrypts *.env.vault files. Never commit this, in
+# either dotfiles repo.
+.vault_pass
+
+# Defense in depth: never allow a plaintext .env to be committed, even
+# by accident, in either repo.
+*.env
+!*.env.vault
+!*.env.example
+
+# System files
+.DS_Store
