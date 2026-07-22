@@ -312,22 +312,30 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/adr";
 
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
-  # canonical file, symlinked to every harness's expected location.
-  home.file.".claude/CLAUDE.md".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
-  home.file.".codex/AGENTS.md".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
-  home.file.".config/opencode/AGENTS.md".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  # canonical file, symlinked to every harness's expected location. A
+  # plain live symlink via home.activation (not home.file) - same
+  # reasoning as installInstallations below: a downstream config
+  # (dotfiles-amway's mergeAgents) overwrites these same three paths with
+  # its own merged file on every rebuild, and a home.file entry here would
+  # make home-manager think it owns that path, triggering its
+  # backupFileExtension logic against content it didn't actually write -
+  # which fails outright once a stale .backup from a prior rebuild is
+  # already sitting there. entryAfter "writeBoundary" only, so any
+  # downstream activation targeting the same path can order itself after
+  # and win.
+  home.activation.installAgentsFile = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/AGENTS.md" "$HOME/.codex/AGENTS.md"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+  '';
 
   # Referenced by home/AGENTS.md's install-instructions pointer - kept out
   # of AGENTS.md's own body so every harness's context window only pays
   # for it when an agent is actually about to install something globally.
-  # A plain live symlink (not home.file, unlike the skills/AGENTS.md above)
-  # so a downstream config can overwrite this same path with its own merged
-  # file without a home.file entry here corrupting the vendored source
-  # through the symlink. entryAfter "writeBoundary" only, so any downstream
-  # activation that also targets this path can order itself after and win.
+  # A plain live symlink (not home.file) - see installAgentsFile above for
+  # why. entryAfter "writeBoundary" only, so any downstream activation
+  # that also targets this path can order itself after and win.
   home.activation.installInstallations = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p "$HOME/.agents/instructions"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/instructions/INSTALLATIONS.md" "$HOME/.agents/instructions/INSTALLATIONS.md"
