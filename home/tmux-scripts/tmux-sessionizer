@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+apply_session_config() {
+	local session="$1"
+	local dir="$2"
+	local script_dir
+	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+	# Prefer a project-local config, fall back to the default
+	local config_file="$dir/.tmux-sessionizer-config"
+	if [[ ! -f "$config_file" ]]; then
+		config_file="$script_dir/.default-tmux-sessionizer-config"
+	fi
+
+	[[ ! -f "$config_file" ]] && return
+
+	# Parse panes: blocks separated by lines containing only "---"
+	local panes=()
+	local block=""
+	while IFS= read -r line || [[ -n "$line" ]]; do
+		if [[ "$line" == "---" ]]; then
+			panes+=("$block")
+			block=""
+		else
+			[[ -n "$block" ]] && block+=$'\n'
+			block+="$line"
+		fi
+	done < "$config_file"
+	# Capture the last block if file doesn't end with ---
+	[[ -n "$block" ]] && panes+=("$block")
+
+	local total="${#panes[@]}"
+	[[ "$total" -eq 0 ]] && return
+
+	send_cmds() {
+		local target="$1"
+		local block="$2"
+		local joined=""
+		while IFS= read -r cmd; do
+			[[ -z "$cmd" ]] && continue
+			[[ -n "$joined" ]] && joined+=" && "
+			joined+="$cmd"
+		done <<< "$block"
+		[[ -n "$joined" ]] && tmux send-keys -t "$target" "$joined" Enter
+	}
+
+	# First window already exists (index 1); run its commands there
+	[[ -n "${panes[0]}" ]] && send_cmds "${session}:1" "${panes[0]}"
+
+	# Create remaining windows
+	for (( i=1; i<total; i++ )); do
+		local win_idx=$(( i + 1 ))
+		tmux new-window -t "${session}:${win_idx}" -c "$dir"
+		[[ -n "${panes[$i]}" ]] && send_cmds "${session}:${win_idx}" "${panes[$i]}"
+	done
+
+	# Focus window 1
+	tmux select-window -t "${session}:1"
+}
+
+# search for project directory
+selected=$(find ~ ~/work ~/learning -mindepth 1 -maxdepth 1 -type d | fzf)
+
+# if we did not select a directory then exit
+if [[ -z $selected ]]; then
+	exit 0
+fi
+
+# tr finds characters in input and replaces them with corresponding character of output
+# I.E. we replace . with _
+session_name=$(basename "$selected" | tr . _)
+
+# check to see if there is a tmux server running
+tmux_running=$(pgrep tmux)
+
+# If we are not in tmux ($TMUX is set by tmux when in a session) and tmux isn't running,
+# then create a new session and exit
+if [[ -z $TMUX ]]; then
+	if [[ -z $tmux_running ]] || ! tmux has-session -t "$session_name" 2> /dev/null; then
+		tmux new-session -s $session_name -c $selected
+	else
+		tmux attach-session -t $session_name
+	fi
+	exit 0
+fi
+
+# If there isn't an existing session for what we've selected then create a new detatched session
+if ! tmux has-session -t "$session_name" 2> /dev/null; then
+# Note: If has-session is running on a session that doesn't exist it will put a message to sout
+# we use the 2> to pipe that into the garbage can '/dev/null'
+	tmux new-session -s "$session_name" -c "$selected" -d
+	apply_session_config "$session_name" "$selected"
+fi
+
+# Switch to the existing or newly created client
+tmux switch-client -t "$session_name"
+
+# Scenarios
+#
+# Not in tmux && tmux isn't running -> no sessions exist
+# Not in tmux && tmux is running && session exists
+# Not in tmux && tmux is running && session does not exist
+# In tmux && session exists -> tmux is running
+# in tmux && session does not exist -> tmux is running

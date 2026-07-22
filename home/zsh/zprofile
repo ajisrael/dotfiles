@@ -1,0 +1,39 @@
+eval "$(/usr/local/bin/brew shellenv)"
+
+# Add Visual Studio Code (code)
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+
+export NVM_DIR="$HOME/.nvm"
+
+# Lazy-load nvm: sourcing nvm.sh eagerly on every shell adds several
+# seconds (nvm_auto version resolution, plus a duplicate compinit pass
+# triggered by nvm's bash-completion shim running before oh-my-zsh's own).
+# Load it for real only the first time nvm/node/npm/npx is actually invoked.
+#
+# IMPORTANT: the loader helper's name MUST keep its double-underscore
+# prefix. Claude Code (and other agent harnesses) snapshot shell functions
+# for non-interactive tool calls and filter out single-underscore-prefixed
+# names (treated as zsh completion functions, e.g. `_git`) while
+# explicitly keeping double-underscore names (the same carve-out
+# mise/pyenv rely on for helpers like `__pyenv_init`). A single-underscore
+# `_load_nvm` gets silently dropped from the snapshot while the
+# `node`/`npm`/`npx`/`nvm` shims below (kept - no leading underscore)
+# still call it, so at snapshot time the helper is "command not found"
+# and each shim falls through to calling itself: infinite recursion until
+# zsh's FUNCNEST limit aborts it. Renaming back to a single underscore
+# reintroduces that bug in every agent shell.
+__load_nvm() {
+  unset -f nvm node npm npx __load_nvm
+  [ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+}
+nvm() { __load_nvm; nvm "$@"; }
+node() { __load_nvm; node "$@"; }
+npm() { __load_nvm; npm "$@"; }
+npx() { __load_nvm; npx "$@"; }
+
+
+# Setting PATH for Python 3.13
+# The original version is saved in .zprofile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.13/bin:${PATH}"
+export PATH

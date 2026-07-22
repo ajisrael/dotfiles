@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(adr *)"
+    ],
+    "ask": [
+      "Bash(rm *)",
+      "Bash(rmdir *)",
+      "Bash(git clean *)",
+      "Bash(git rm *)",
+      "Bash(unlink *)",
+      "Bash(trash *)",
+      "Bash(aws s3 rb *)",
+      "Bash(aws s3 rm *)",
+      "Bash(aws ec2 terminate-instances *)",
+      "Bash(aws ec2 delete-*)",
+      "Bash(aws rds delete-*)",
+      "Bash(aws lambda delete-*)",
+      "Bash(aws iam delete-*)",
+      "Bash(aws iam detach-*)",
+      "Bash(aws iam remove-*)",
+      "Bash(aws cloudformation delete-*)",
+      "Bash(aws dynamodb delete-*)",
+      "Bash(aws sqs delete-*)",
+      "Bash(aws sns delete-*)",
+      "Bash(aws ecs delete-*)",
+      "Bash(aws ecs deregister-*)",
+      "Bash(aws logs delete-*)",
+      "Bash(aws secretsmanager delete-*)",
+      "Bash(aws ssm delete-*)",
+      "Bash(aws stepfunctions delete-*)",
+      "Bash(aws route53 delete-*)",
+      "Bash(aws elb delete-*)",
+      "Bash(aws elbv2 delete-*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "opusplan",
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "theme": "dark-ansi",
+  "editorMode": "vim",
+  "preferredNotifChannel": "iterm2_with_bell"
+}

@@ -1,0 +1,15 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[includeIf "gitdir:~/learning/"]
+	path = ~/dotfiles/home/git/personal.gitconfig
+
+[fem]
+	dev = is amazing!
+[init]
+	defaultBranch = main
+[core]
+	excludesFile = ~/dotfiles/home/git/gitignore_global
