@@ -1076,8 +1076,11 @@
   typeset -g POWERLEVEL9K_NVM_FOREGROUND=0
   typeset -g POWERLEVEL9K_NVM_BACKGROUND=5
   # If set to false, hide node version if it's the same as default:
-  # $(nvm version current) == $(nvm version default).
-  typeset -g POWERLEVEL9K_NVM_PROMPT_ALWAYS_SHOW=false
+  # $(nvm version current) == $(nvm version default). Set to true so the
+  # segment always shows the active version - otherwise it goes blank
+  # when cd-ing back to a directory with no .nvmrc, which reads as "no
+  # node version info" rather than "using the default version".
+  typeset -g POWERLEVEL9K_NVM_PROMPT_ALWAYS_SHOW=true
   # If set to false, hide node version if it's equal to "system".
   typeset -g POWERLEVEL9K_NVM_SHOW_SYSTEM=true
   # Custom icon.
