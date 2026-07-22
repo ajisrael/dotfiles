@@ -118,8 +118,23 @@ in
   # programs.zsh/programs.git/programs.ssh modules - same reasoning as the
   # comment below about not fighting the existing oh-my-zsh + Powerlevel10k
   # setup.
-  home.file.".zshrc".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zshrc";
+  #
+  # .zshrc/.gitconfig/.ssh/config specifically are plain live symlinks via
+  # home.activation (not home.file), same reasoning as installAgentsFile
+  # above: a downstream work-specific profile repo may regenerate these
+  # same three paths with its own merged content on every rebuild, and a
+  # home.file entry here would make home-manager think it owns the path,
+  # triggering its backupFileExtension logic against content it didn't
+  # actually write - which fails outright once a stale .backup from a
+  # prior rebuild is already sitting there. entryAfter "writeBoundary"
+  # only, so any downstream activation targeting the same path can order
+  # itself after and win.
+  home.activation.installShellConfigFiles = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD mkdir -p "$HOME/.ssh"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/zsh/zshrc" "$HOME/.zshrc"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/git/gitconfig" "$HOME/.gitconfig"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/ssh/rootconfig" "$HOME/.ssh/config"
+  '';
   # Was a plain untracked file (not a symlink) until the nvm lazy-load
   # helper's naming bug (see home/zsh/zprofile's own comment) surfaced that
   # a fresh machine would silently not get this lazy-load at all.
@@ -129,10 +144,6 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/tmux.conf";
   home.file.".hammerspoon/init.lua".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/hammerspoon/init.lua";
-  home.file.".gitconfig".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/git/gitconfig";
-  home.file.".ssh/config".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/ssh/rootconfig";
 
   # Was dangling at the deleted dotfiles-personal path after the rename -
   # not previously declared here at all, just a manually-created symlink.
