@@ -73,6 +73,11 @@
       "alt-tab"
       "iterm2"
 
+      # Menu-bar toggle + hotkey for keeping the machine awake with the
+      # lid closed (see home/hammerspoon/init.lua) - macOS >= 13 required,
+      # this machine is on Ventura (13.7.8).
+      "hammerspoon"
+
       # No nixpkgs equivalent, or GUI .app convention (deep system
       # integration like Docker Desktop's privileged helper/VM, or a
       # different product from any similarly-named nixpkgs package).

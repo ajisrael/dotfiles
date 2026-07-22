@@ -122,6 +122,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zshrc";
   home.file.".tmux.conf".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/tmux.conf";
+  home.file.".hammerspoon/init.lua".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/hammerspoon/init.lua";
   home.file.".gitconfig".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/git/gitconfig";
   home.file.".ssh/config".source =
