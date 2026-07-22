@@ -54,7 +54,11 @@ fi
 # is actually found.
 __nvmrc_hook() {
   local dir="$PWD"
-  while [[ "$dir" != "/" ]]; do
+  # Loop on dir != "" (matching nvm's own nvm_find_up), not dir != "/":
+  # `${dir%/*}` on a single-segment path like "/Users" collapses straight
+  # to "" rather than "/", so terminating on "/" never triggers and this
+  # spins forever - hanging every `cd ..` once it walks above such a path.
+  while [[ -n "$dir" ]]; do
     if [[ -f "$dir/.nvmrc" ]]; then
       nvm use --silent
       return
