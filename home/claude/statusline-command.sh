@@ -46,10 +46,10 @@ if [ -n "$branch" ]; then
   num_unstaged=$(git -C "$dir" diff --name-only 2>/dev/null | wc -l | tr -d ' ')
   num_untracked=$(git -C "$dir" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
   if [ -n "$num_behind" ] && [ "$num_behind" -gt 0 ]; then
-    branch_display=$(printf "%s ${branch_color}⇣%s" "$branch_display" "$num_behind")
+    branch_display=$(printf "%s ${tn_blue}⇣%s${branch_color}" "$branch_display" "$num_behind")
   fi
   if [ -n "$num_ahead" ] && [ "$num_ahead" -gt 0 ]; then
-    branch_display=$(printf "%s ${branch_color}⇡%s" "$branch_display" "$num_ahead")
+    branch_display=$(printf "%s ${tn_blue}⇡%s${branch_color}" "$branch_display" "$num_ahead")
   fi
   if [ "$num_staged" -gt 0 ]; then
     branch_display=$(printf "%s ${tn_blue}+%s${branch_color}" "$branch_display" "$num_staged")
