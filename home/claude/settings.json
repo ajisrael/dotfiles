@@ -4,6 +4,10 @@
     "allow": [
       "Bash(adr *)"
     ],
+    "deny": [
+      "Bash(tmux kill-server*)",
+      "Bash(killall tmux*)"
+    ],
     "ask": [
       "Bash(rm *)",
       "Bash(rmdir *)",
