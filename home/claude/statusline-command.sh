@@ -32,20 +32,24 @@ case "$branch" in
   *) branch_color="$tn_green" ;;
 esac
 
-# Same +staged/!unstaged convention as the shell prompt's p10k vcs segment.
-# Built via printf (not plain interpolation) so the embedded \033 color
-# codes are resolved to real escape bytes now - the final printf below
-# substitutes this in through %s, which does not interpret backslash
+# Same +staged/!unstaged/?untracked convention as the shell prompt's p10k
+# vcs segment. Built via printf (not plain interpolation) so the embedded
+# \033 color codes are resolved to real escape bytes now - the final printf
+# below substitutes this in through %s, which does not interpret backslash
 # escapes in substituted values, only in its own literal format string.
 branch_display="$branch"
 if [ -n "$branch" ]; then
   num_staged=$(git -C "$dir" diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')
   num_unstaged=$(git -C "$dir" diff --name-only 2>/dev/null | wc -l | tr -d ' ')
+  num_untracked=$(git -C "$dir" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
   if [ "$num_staged" -gt 0 ]; then
     branch_display=$(printf "%s ${tn_yellow}+%s${branch_color}" "$branch_display" "$num_staged")
   fi
   if [ "$num_unstaged" -gt 0 ]; then
     branch_display=$(printf "%s ${tn_yellow}!%s${branch_color}" "$branch_display" "$num_unstaged")
+  fi
+  if [ "$num_untracked" -gt 0 ]; then
+    branch_display=$(printf "%s ${tn_yellow}?%s${branch_color}" "$branch_display" "$num_untracked")
   fi
 fi
 
