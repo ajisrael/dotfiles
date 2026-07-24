@@ -2,6 +2,8 @@
 
 - Never use the em dash "—". Use plain dash "-" instead
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
+- Never run `tmux kill-server` (or any command that tears down the whole tmux
+  server, e.g. `killall tmux`).
 - When making technical decisions, do not give much weight to development cost.
   Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user would experience it as possible.
