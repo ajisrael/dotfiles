@@ -52,13 +52,13 @@ if [ -n "$branch" ]; then
     branch_display=$(printf "%s ${branch_color}⇡%s" "$branch_display" "$num_ahead")
   fi
   if [ "$num_staged" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_yellow}+%s${branch_color}" "$branch_display" "$num_staged")
+    branch_display=$(printf "%s ${tn_blue}+%s${branch_color}" "$branch_display" "$num_staged")
   fi
   if [ "$num_unstaged" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_yellow}!%s${branch_color}" "$branch_display" "$num_unstaged")
+    branch_display=$(printf "%s ${tn_blue}!%s${branch_color}" "$branch_display" "$num_unstaged")
   fi
   if [ "$num_untracked" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_yellow}?%s${branch_color}" "$branch_display" "$num_untracked")
+    branch_display=$(printf "%s ${tn_blue}?%s${branch_color}" "$branch_display" "$num_untracked")
   fi
 fi
 
