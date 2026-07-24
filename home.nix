@@ -119,19 +119,20 @@ in
   # comment below about not fighting the existing oh-my-zsh + Powerlevel10k
   # setup.
   #
-  # .zshrc/.gitconfig/.ssh/config specifically are plain live symlinks via
-  # home.activation (not home.file), same reasoning as installAgentsFile
-  # above: a downstream work-specific profile repo may regenerate these
-  # same three paths with its own merged content on every rebuild, and a
-  # home.file entry here would make home-manager think it owns the path,
-  # triggering its backupFileExtension logic against content it didn't
-  # actually write - which fails outright once a stale .backup from a
-  # prior rebuild is already sitting there. entryAfter "writeBoundary"
-  # only, so any downstream activation targeting the same path can order
-  # itself after and win.
+  # .zshrc/.tmux.conf/.gitconfig/.ssh/config specifically are plain live
+  # symlinks via home.activation (not home.file), same reasoning as
+  # installAgentsFile above: a downstream work-specific profile repo may
+  # regenerate these same paths with its own merged content on every
+  # rebuild, and a home.file entry here would make home-manager think it
+  # owns the path, triggering its backupFileExtension logic against content
+  # it didn't actually write - which fails outright once a stale .backup
+  # from a prior rebuild is already sitting there. entryAfter
+  # "writeBoundary" only, so any downstream activation targeting the same
+  # path can order itself after and win.
   home.activation.installShellConfigFiles = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p "$HOME/.ssh"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/zsh/zshrc" "$HOME/.zshrc"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/tmux.conf" "$HOME/.tmux.conf"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/git/gitconfig" "$HOME/.gitconfig"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/ssh/rootconfig" "$HOME/.ssh/config"
   '';
@@ -140,8 +141,6 @@ in
   # a fresh machine would silently not get this lazy-load at all.
   home.file.".zprofile".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/zsh/zprofile";
-  home.file.".tmux.conf".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/tmux.conf";
   home.file.".hammerspoon/init.lua".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/hammerspoon/init.lua";
 
