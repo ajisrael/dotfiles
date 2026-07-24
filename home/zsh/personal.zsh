@@ -98,7 +98,6 @@ export PATH="$PATH:$HOME/learning/boot-dev/learning-linux/worldbanc/private/bin"
 
 # Remove claude alias from websearch plugin
 unalias claude 2>/dev/null
-export PATH="$HOME/learning/claude-code-playground:$PATH"
 
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
