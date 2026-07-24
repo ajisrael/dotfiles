@@ -112,3 +112,8 @@ it never rewrites the submodule's own history.
   ```sh
   curl -sL https://releases.nixos.org/nix/nix-2.24.10/install | sh -s -- --daemon
   ```
+
+## Additional Setup Notes
+
+- When using Handy, Model that yields the best results is the canary 180M
+  flash for speed with decent accuracy.
