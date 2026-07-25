@@ -78,6 +78,16 @@
       # this machine is on Ventura (13.7.8).
       "hammerspoon"
 
+      # nixpkgs has claude-code, but it lags upstream releases (pinned to
+      # whatever nixpkgs revision this flake locks) while Claude Code ships
+      # near-daily - staying multiple versions behind reintroduces the kind
+      # of drift/instability this entry is meant to fix. Homebrew cask
+      # tracks upstream fast via `brew upgrade` instead. Was previously the
+      # native curl|sh installer self-updating into ~/.local/bin
+      # (~/.local/share/claude/versions) - removed that in favor of a single
+      # declarative install path.
+      "claude-code"
+
       # No nixpkgs equivalent, or GUI .app convention (deep system
       # integration like Docker Desktop's privileged helper/VM, or a
       # different product from any similarly-named nixpkgs package).
