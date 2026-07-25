@@ -45,7 +45,7 @@
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
-  "theme": "dark-ansi",
+  "theme": "custom:tokyo-night",
   "editorMode": "vim",
   "preferredNotifChannel": "iterm2_with_bell"
 }

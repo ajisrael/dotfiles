@@ -149,6 +149,13 @@ in
   home.file.".claude/statusline-command.sh".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/claude/statusline-command.sh";
 
+  # Custom theme matching the Tokyo Night palette already used by the
+  # statusline/tmux/iTerm2/nvim setup - referenced by settings.json's
+  # "theme": "custom:tokyo-night". Claude Code reads *.json files directly
+  # from ~/.claude/themes/, keyed by filename (minus .json).
+  home.file.".claude/themes/tokyo-night.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/claude/themes/tokyo-night.json";
+
   # Same dangling-after-rename problem as statusline-command.sh above -
   # ~/.config/nvim was a manually-created symlink still pointing at the
   # deleted dotfiles-personal path.
