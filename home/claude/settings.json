@@ -6,7 +6,8 @@
     ],
     "deny": [
       "Bash(tmux kill-server*)",
-      "Bash(killall tmux*)"
+      "Bash(killall tmux*)",
+      "Read(*.env)"
     ],
     "ask": [
       "Bash(rm *)",
