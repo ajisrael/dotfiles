@@ -26,8 +26,8 @@
     "diffRemovedDimmed": "#2a0f0f",
     "diffAddedWord": "#3d5a3d",
     "diffRemovedWord": "#5a3d3d",
-    "userMessageBackground": "#2d2752",
-    "userMessageBackgroundHover": "#372f63",
+    "userMessageBackground": "#6c369e",
+    "userMessageBackgroundHover": "#7c40b3",
     "bashMessageBackgroundColor": "#1a1b26",
     "memoryBackgroundColor": "#1a1b26"
   }
