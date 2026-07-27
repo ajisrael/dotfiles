@@ -167,6 +167,12 @@ in
   home.file."Library/Application Support/iTerm2/DynamicProfiles/tokyonight-pkmn.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/iterm2/tokyonight-pkmn.json";
 
+  # opencode's TUI prefs (vim keybinds, theme, plugin) - generic and
+  # personal, unlike opencode.json which holds machine/employer-specific
+  # provider and MCP config and is deliberately not managed here.
+  home.file.".config/opencode/tui.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/opencode/tui.json";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -
