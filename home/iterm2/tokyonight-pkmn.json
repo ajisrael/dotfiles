@@ -361,7 +361,6 @@
         "Green Component": 0.1058823529411765,
         "Red Component": 0.1019607843137255
       },
-      "Background Image Location": "/Users//Downloads/Raquaza Background/Slide1.png",
       "Background Image Mode": 2,
       "Badge Color": {
         "Alpha Component": 0.5,
@@ -797,8 +796,7 @@
       "Use Separate Colors for Light and Dark Mode": false,
       "Vertical Spacing": 1.0,
       "Visual Bell": true,
-      "Window Type": 0,
-      "Working Directory": "/Users/"
+      "Window Type": 0
     }
   ]
 }
