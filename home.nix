@@ -173,6 +173,13 @@ in
   home.file.".config/opencode/tui.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/opencode/tui.json";
 
+  # Herdr - trying it out alongside tmux, not replacing it (see
+  # configuration.nix's homebrew.brews comment for the install-tier
+  # reasoning). Only vim-style pane nav + the Tokyo Night theme are here;
+  # tmux-sessionizer has no Herdr equivalent, so that stays tmux-only.
+  home.file.".config/herdr/config.toml".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/herdr/config.toml";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -
@@ -275,8 +282,8 @@ in
     };
   };
 
-  # Pin the three axi-family CLIs (kunchenguid's agent-ergonomic wrappers)
-  # to an exact, reviewed npm version and install them globally, instead of
+  # Pin the axi-family CLIs (kunchenguid's agent-ergonomic wrappers) to an
+  # exact, reviewed npm version and install them globally, instead of
   # letting their own documented `npx -y <pkg>` skill instructions re-fetch
   # unpinned from the npm registry on every agent invocation. Bumping a
   # version is a deliberate, reviewed edit to home/skills/install-axi-family.sh
@@ -336,6 +343,21 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/lavish/SKILL.md";
   home.file.".agents/skills/lavish/SKILL.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/lavish/SKILL.md";
+
+  # tasks-axi/quota-axi - firstmate's backlog-mutation and quota-aware
+  # dispatch helpers, pinned/synced the same way as the three axi-family
+  # skills above (see docs/configuration.md's "Toolchain" section in the
+  # firstmate repo for why these two are required alongside gh-axi/
+  # chrome-devtools-axi/lavish-axi).
+  home.file.".claude/skills/tasks-axi/SKILL.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/tasks-axi/SKILL.md";
+  home.file.".agents/skills/tasks-axi/SKILL.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/tasks-axi/SKILL.md";
+
+  home.file.".claude/skills/quota-axi/SKILL.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/quota-axi/SKILL.md";
+  home.file.".agents/skills/quota-axi/SKILL.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/quota-axi/SKILL.md";
 
   # no-mistakes' skill is normally installed by `no-mistakes init`, which
   # also requires running inside a git repo with an "origin" remote (it

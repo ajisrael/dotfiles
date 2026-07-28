@@ -1,0 +1,27 @@
+# Trying Herdr alongside tmux, not replacing it - see AGENTS.md's Herdr
+# entry. Only the parts of the tmux setup that translate: vim-style pane
+# nav and the Tokyo Night theme already used by tmux/iTerm2/statusline.
+# There's no Herdr equivalent for tmux-sessionizer (fzf project picker +
+# per-project startup commands), so that stays tmux-only.
+
+[theme]
+name = "tokyo-night"
+
+[keys]
+prefix = "ctrl+b"
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+navigate_pane_down = "j"
+navigate_pane_up = "k"
+navigate_pane_left = "h"
+navigate_pane_right = "l"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+description = "run lazygit"
+width = "90%"
+height = "90%"

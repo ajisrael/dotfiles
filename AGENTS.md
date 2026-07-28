@@ -35,3 +35,15 @@ git commit -m "Update nvim submodule pointer"
 That second commit only records which submodule commit this repo points
 at - it never rewrites the submodule's own history.
 
+## Herdr is pinned to Homebrew, not nixpkgs, until the next branch bump
+
+nixpkgs has `pkgs/by-name/he/herdr/package.nix` and home-manager has a
+`programs.herdr` module, but both landed on `master`/`unstable` only
+(2026-05/06) - confirmed 404 on the `nixpkgs-26.05-darwin`/`release-26.05`
+branches this flake pins to, as of 2026-07-28. Installed via
+`homebrew.brews` (tier 2) in the meantime; config is a plain symlinked
+`home/herdr/config.toml`, not `programs.herdr.settings`. Re-check
+availability on the pinned branches next time flake.nix's inputs are
+bumped, and migrate to tier 1 (`home.packages` + `programs.herdr`) once
+it's there.
+
