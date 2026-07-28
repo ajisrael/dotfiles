@@ -153,6 +153,33 @@ Enable laptop ACPI event handling.
 
 ---
 
+## Keyboard and Trackpad Drivers (model-specific - check before installing)
+
+Confirm whether this Mac's internal keyboard/trackpad are wired via the SPI
+bus or plain internal USB before installing any input driver - installing
+the wrong one causes a silent conflict, not just a no-op.
+`cat /sys/class/dmi/id/product_name`
+
+MacBook8,1/9,1 (12" 2015) and Touch Bar-era MacBook Pros (2016+) wire the
+keyboard/trackpad over SPI and need the third-party `applespi` driver
+(DKMS package `macbook12-spi-driver`, plus `spi_pxa2xx_platform` and
+`spi_pxa2xx_pci`/`intel_lpss_pci` loaded early in
+`mkinitcpio.conf`'s `MODULES=(...)`).
+
+MacBookPro11,x and MacBookPro12,1 (2015 13"/15" Pro, no Touch Bar) wire the
+keyboard/trackpad as a plain internal USB HID device instead - no extra
+driver needed. Installing `applespi`/`spi_pxa2xx_platform`/`spi_pxa2xx_pci`
+on these models anyway makes `applespi` attach to a phantom ACPI SPI
+device that times out continuously (`SPI transfer timed out` /
+`Error reading from device: -110` in a tight loop), which in turn power-
+cycles and starves the real internal USB port so the keyboard/trackpad
+never enumerate. If keyboard/trackpad don't work after install, check for
+this failure mode before assuming a missing driver, and remove the SPI
+modules/DKMS package if it's the wrong generation of hardware.
+`journalctl -k -b | grep -E 'applespi|SPI transfer timed out|unable to enumerate'`
+
+---
+
 ## Leaving the Installer
 
 Exit the chroot environment.
