@@ -308,6 +308,9 @@ in
   # truth for the installed version.
   home.activation.installOpencode = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     export NPM_CONFIG_PREFIX="${npmGlobalPrefix}"
+    # opencode-ai's postinstall script shells out to a bare `node` - needs
+    # nodejs on PATH, not just invoked via its absolute store path below.
+    export PATH="${pkgs.nodejs}/bin:$PATH"
     installed="$( ("${pkgs.nodejs}/bin/npm" ls -g --depth=0 --json opencode-ai 2>/dev/null || true) \
       | "${pkgs.jq}/bin/jq" -r '.dependencies."opencode-ai".version // ""')"
     if [ "$installed" != "1.18.7" ]; then
