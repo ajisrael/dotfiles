@@ -116,3 +116,29 @@ if command -v podman >/dev/null 2>&1; then
   [ -n "$_podman_socket" ] && export DOCKER_HOST="unix://$_podman_socket"
   unset _podman_socket
 fi
+
+# firstmate (github.com/kunchenguid/firstmate) - a cloned "agent distro"
+# you launch a harness inside of, which then becomes a supervisor spawning
+# sub-agents ("crewmates") to ship PRs. Not a package - there's nothing for
+# Nix to install here, so this just gets you into the personal clone and
+# launches the harness; the clone itself is manual, per firstmate's own
+# README:
+#   git clone https://github.com/kunchenguid/firstmate ~/firstmate
+# dotfiles-amway defines the matching `fm-work` for the separate
+# ~/firstmate-amway clone, kept out of this repo since it must stay
+# employer-agnostic.
+#
+# `gh auth switch` first: gh has one global active account, not a
+# per-directory one, so anything firstmate shells out to gh-axi/gh for
+# (PRs, issues) would otherwise run as whichever account was last active -
+# possibly the work one. ~/firstmate/'s own commit identity is handled
+# separately by gitconfig's includeIf on gitdir.
+fm-personal() {
+  if [[ ! -d "$HOME/firstmate" ]]; then
+    echo "fm-personal: ~/firstmate not found - clone it first:" >&2
+    echo "  git clone https://github.com/kunchenguid/firstmate ~/firstmate" >&2
+    return 1
+  fi
+  gh auth switch --user ajisrael || return 1
+  (cd "$HOME/firstmate" && claude)
+}

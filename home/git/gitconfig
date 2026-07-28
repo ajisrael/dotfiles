@@ -7,6 +7,9 @@
 [includeIf "gitdir:~/learning/"]
 	path = ~/dotfiles/home/git/personal.gitconfig
 
+[includeIf "gitdir:~/firstmate/"]
+	path = ~/dotfiles/home/git/personal.gitconfig
+
 [fem]
 	dev = is amazing!
 [init]
