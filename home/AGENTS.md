@@ -63,30 +63,6 @@ clone over `gh`/`WebFetch`/the GitHub API whenever one exists.
   commit convention if it has one, otherwise fall back to the default
   format described there.
 
-## Generated files - edit the source, not the output
-
-This repo is the personal base and is meant to be extendable by a
-separate, work-specific profile repo layered on top (e.g. via `imports`
-in that repo's flake) - one that appends its own addendum to files this
-repo owns, or merges in its own overlay. Files below plant an unmerged,
-personal-only version first specifically so a downstream profile's
-activation script (ordered after this repo's) can safely overwrite it
-with a merged version:
-
-- `~/.claude/settings.json`, `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`,
-  and `~/.config/opencode/AGENTS.md` are all plain live symlinks
-  (`home.activation` + `ln -sfn`, not `home.file`) for exactly this
-  reason - a `home.file` entry would make home-manager think it owns the
-  path and fight a downstream profile's overwrite via its
-  `backupFileExtension` logic.
-- `~/.agents/instructions/INSTALLATIONS.md` works the same way, wired
-  from this repo's `home/instructions/INSTALLATIONS.md`.
-- If a symptom looks like "I edited a dotfile in `~/.config` or
-  `~/.claude` etc. but it keeps reverting" or "the change isn't taking
-  effect", check whether a work-specific profile repo exists on this
-  machine and has a `home.activation` script targeting that same path,
-  ordered after this repo's - before assuming the edit failed.
-
 ## Maintaining this file and project-level agent context files
 
 - Whenever you get course-corrected, made an incorrect assumption, or
