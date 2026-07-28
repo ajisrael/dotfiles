@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Pins and installs the axi-family CLIs (kunchenguid's agent-ergonomic
-# GitHub/browser/HTML-review wrappers) to exact, reviewed npm versions,
-# instead of relying on their documented unpinned `npx -y <pkg>` skill
-# invocation - a real supply-chain exposure once paired with no-mistakes'
-# elevated pipeline-agent invocations. Bumping a version below is a
-# deliberate, reviewed edit - see
-# ~/.claude/plans/memoized-mixing-quilt.md for the rationale.
+# GitHub/browser/HTML-review/backlog/dispatch wrappers) to exact, reviewed
+# npm versions, instead of relying on their documented unpinned
+# `npx -y <pkg>` skill invocation - a real supply-chain exposure once
+# paired with no-mistakes' elevated pipeline-agent invocations. Bumping a
+# version below is a deliberate, reviewed edit - see
+# ~/.claude/plans/memoized-mixing-quilt.md for the rationale (gh-axi/
+# chrome-devtools-axi/lavish-axi) and firstmate's docs/configuration.md
+# "Toolchain" section (tasks-axi/quota-axi, added when firstmate itself
+# was integrated).
 #
 # Run via home.nix's installAxiFamily activation block, which sets
 # NPM_CONFIG_PREFIX before calling this (Nix's nodejs defaults npm's
@@ -43,3 +46,5 @@ installAxiPkg() {
 installAxiPkg gh-axi 0.1.27 gh-axi
 installAxiPkg chrome-devtools-axi 0.1.26 chrome-devtools-axi
 installAxiPkg lavish-axi 0.1.42 lavish
+installAxiPkg tasks-axi 0.2.3 tasks-axi
+installAxiPkg quota-axi 0.1.15 quota-axi

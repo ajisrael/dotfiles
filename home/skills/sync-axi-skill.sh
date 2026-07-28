@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Regenerates a local SKILL.md for one axi-family package from the exact
 # copy shipped inside the pinned, globally installed npm package itself
-# (each of gh-axi/chrome-devtools-axi/lavish-axi ships skills/<name>/SKILL.md
-# in its own npm `files` list), with every `npx -y <pkg>` invocation
-# rewritten to a plain call to the installed binary.
+# (each of gh-axi/chrome-devtools-axi/lavish-axi/tasks-axi/quota-axi ships
+# skills/<name>/SKILL.md in its own npm `files` list), with every
+# `npx -y <pkg>` invocation rewritten to a plain call to the installed
+# binary.
 #
 # Run via home.nix's installAxiFamily activation block right after
 # `npm install -g <pkg>@<version>`, so bumping the pinned version there and
