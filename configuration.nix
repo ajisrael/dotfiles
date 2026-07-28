@@ -57,6 +57,13 @@
   #   nvm: no nixpkgs package (it's a shell function/script managing
   #        ~/.nvm, not a typical binary - a known nixpkgs gap).
   #   mongocli: confirmed absent from nixpkgs-26.05-darwin.
+  #   herdr: nixpkgs has pkgs/by-name/he/herdr/package.nix and
+  #          home-manager has a programs.herdr module, but both landed on
+  #          nixpkgs/home-manager `master` only (2026-05/06) - confirmed
+  #          404 on the pinned nixpkgs-26.05-darwin/release-26.05 branches
+  #          as of 2026-07-28. Revisit tier 1 once a future flake.nix
+  #          branch bump picks them up; config lives at home/herdr/config.toml
+  #          in the meantime, symlinked below the same way tmux.conf is.
   #   opencode: considered both nixpkgs (too far behind upstream, same
   #             argument as claude-code below) and Homebrew - rejected the
   #             latter because this machine's macOS 13 is Homebrew Tier 3
@@ -72,7 +79,7 @@
     enable = true;
     onActivation.cleanup = "none";
     onActivation.autoUpdate = true;
-    brews = [ "nvm" "mongocli" ];
+    brews = [ "nvm" "mongocli" "herdr" ];
     # GUI .app bundles stay on Homebrew casks (tier 2) for proper
     # /Applications integration, Spotlight visibility, and auto-update
     # behavior, even where a same-named nixpkgs package exists (e.g.
