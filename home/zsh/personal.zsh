@@ -99,9 +99,6 @@ export PATH="$PATH:$HOME/learning/boot-dev/learning-linux/worldbanc/private/bin"
 # Remove claude alias from websearch plugin
 unalias claude 2>/dev/null
 
-# opencode
-export PATH="$HOME/.opencode/bin:$PATH"
-
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 

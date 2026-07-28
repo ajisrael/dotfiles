@@ -1,7 +1,13 @@
 {
   "$schema": "https://opencode.ai/tui.json",
   "keybinds": {
-    "edit_prompt": "ctrl+g"
+    "edit_prompt": "ctrl+g",
+    "vim.normal": {
+      "scroll_top": "none"
+    },
+    "vim.insert": {
+      "enter": "submit_prompt"
+    }
   },
   "theme": "system",
   "plugin": [

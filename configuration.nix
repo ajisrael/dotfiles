@@ -57,6 +57,15 @@
   #   nvm: no nixpkgs package (it's a shell function/script managing
   #        ~/.nvm, not a typical binary - a known nixpkgs gap).
   #   mongocli: confirmed absent from nixpkgs-26.05-darwin.
+  #   opencode: considered both nixpkgs (too far behind upstream, same
+  #             argument as claude-code below) and Homebrew - rejected the
+  #             latter because this machine's macOS 13 is Homebrew Tier 3
+  #             (no bottles), and opencode pulls in ripgrep -> rust as a
+  #             build dependency, forcing a multi-hour from-source rust
+  #             compile that also ignores the already-working
+  #             rustup-managed Rust toolchain at ~/.cargo. Pinned-version
+  #             npm install (home.nix's installOpencode) avoids all of
+  #             that - see there for detail.
   # Everything else previously on Homebrew was verified available in
   # nixpkgs and moved to home.packages instead - see home.nix.
   homebrew = {

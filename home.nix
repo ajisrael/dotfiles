@@ -294,6 +294,27 @@ in
       "${pkgs.nodejs}/bin/npm" "${pkgs.jq}/bin/jq" "${dotfiles}/home/skills"
   '';
 
+  # opencode CLI - pinned-version npm global install, same idempotency
+  # shape as installAxiFamily above (reinstall only when the installed
+  # version doesn't match the pin). Neither Nix nor Homebrew tier fit: see
+  # configuration.nix's homebrew comment for why Homebrew was rejected
+  # (Tier-3 macOS forces a multi-hour from-source rust build via
+  # ripgrep's build dependency). npm installs opencode-ai's prebuilt
+  # binary instead - no compilation, and npmGlobalPrefix already puts it
+  # on PATH with no separate PATH export needed. Was previously
+  # self-installed/self-updating into ~/.opencode/bin via `opencode
+  # upgrade`; bump the version below by hand instead of relying on that
+  # self-updater, so this activation block stays the single source of
+  # truth for the installed version.
+  home.activation.installOpencode = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    export NPM_CONFIG_PREFIX="${npmGlobalPrefix}"
+    installed="$( ("${pkgs.nodejs}/bin/npm" ls -g --depth=0 --json opencode-ai 2>/dev/null || true) \
+      | "${pkgs.jq}/bin/jq" -r '.dependencies."opencode-ai".version // ""')"
+    if [ "$installed" != "1.18.7" ]; then
+      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g opencode-ai@1.18.7
+    fi
+  '';
+
   # Local skill files, kept in sync with each pinned axi-family package by
   # the installAxiFamily activation block above - symlinked into both
   # Claude Code's and the generic ~/.agents/skills/ convention so other
