@@ -254,6 +254,16 @@ in
     $DRY_RUN_CMD ${pkgs.bash}/bin/bash "${dotfiles}/home/skills/install-podman.sh"
   '';
 
+  # intellij-idea/intellij-idea-ce aren't in configuration.nix's
+  # homebrew.casks - the current homebrew-cask recipes use a
+  # `command_wrapper` stanza nix-homebrew's pinned brew engine doesn't
+  # implement yet (see that file's comment). Installs and pins the last
+  # pre-migration recipe instead, same tier-3 (curl/imperative) local-tap
+  # pattern as installPodman above.
+  home.activation.installIntellijPin = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD ${pkgs.bash}/bin/bash "${dotfiles}/home/skills/install-intellij-pin.sh"
+  '';
+
   # Starts the rootless podman machine VM on login, replacing Docker
   # Desktop's auto-launched VM. `podman machine start` exits nonzero if the
   # machine is already running (e.g. after a fast logout/login or a second
