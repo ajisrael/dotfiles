@@ -16,21 +16,6 @@
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 
-## Large file writes (4096 output-token cap)
-
-A single model turn can only emit ~4096 output tokens, so one `Write` (or
-one giant `Edit`) call can silently truncate a large file (a big HTML
-artifact, a long generated doc, a large source file). When the content
-you're producing is large:
-
-- Write a minimal skeleton first (structure/containers only), then add the
-  rest with a sequence of smaller `Edit` calls, each well under the cap.
-- Prefer many small, targeted edits over one large rewrite, even when
-  targeting the same file repeatedly.
-- This applies regardless of tool (Write, Edit, MultiEdit, or a subagent
-  producing file content) - the cap is on the model's output per turn, not
-  on the tool itself.
-
 ## Local clones of referenced repositories
 
 Documents (ADRs, plans, PR descriptions) reference repositories the way a
