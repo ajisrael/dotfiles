@@ -109,8 +109,6 @@
       # different product from any similarly-named nixpkgs package).
       "dbeaver-community"
       "flux-app"
-      "intellij-idea"
-      "intellij-idea-ce"
       "open-design"
 
       # Local whisper.cpp-based dictation replacement (Intel-Mac-confirmed,
@@ -133,6 +131,17 @@
       # was dropped upstream), so it's pinned to the last Intel-compatible
       # version via home.nix's installPodman activation script instead - see
       # home/skills/install-podman.sh for the detail.
+      #
+      # intellij-idea/intellij-idea-ce aren't declared here either: their
+      # current homebrew-cask recipes use a `command_wrapper` stanza (added
+      # 2026-07-20) that nix-homebrew's pinned brew engine doesn't
+      # understand yet, so `brew bundle` fails reading either recipe -
+      # confirmed as of 2026-07-29, with nix-homebrew's latest release still
+      # pinning brew short of that support. Pinned to the last
+      # pre-migration recipe via home.nix's installIntellijPin activation
+      # script instead - see home/skills/install-intellij-pin.sh for the
+      # detail. Revisit moving them back here once nix-homebrew's brew-src
+      # pin catches up.
     ];
   };
 }
