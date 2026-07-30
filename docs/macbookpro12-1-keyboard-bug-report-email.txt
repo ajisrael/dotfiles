@@ -1,0 +1,178 @@
+To: linux-usb@vger.kernel.org
+Cc: linux-input@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org
+Subject: [BUG] MacBookPro12,1 internal keyboard/trackpad dead in both its USB and SPI modes
+
+Hardware: MacBook Pro (Retina, 13-inch, Early 2015), MacBookPro12,1
+CPU architecture: x86_64
+Kernel: 7.2.0-rc5-1-mainline (built from kernel.org mainline via the Arch
+Linux AUR "linux-mainline" package, commit fc02acf6ac0c - "Merge tag
+'platform-drivers-x86-v7.2-4' of
+git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86").
+Also reproduced on Arch Linux's own kernel package, 7.1.5.arch1-2 (a
+near-vanilla build).
+Linux distribution: Arch Linux
+
+lspci -nn for the xHCI controller:
+00:14.0 USB controller [0c03]: Intel Corporation Wildcat Point-LP USB
+xHCI Controller [8086:9cb1] (rev 03)
+
+Summary
+-------
+This model's internal keyboard/trackpad controller is dual-mode: the
+same pins can carry either a USB or an SPI signal, switched electrically
+via ACPI methods. Confirmed via drivers/input/keyboard/applespi.c's own
+top-of-file comment: "The keyboard and touchpad controller on the
+MacBookAir6, MacBookPro12, MacBook8 and newer can be driven either by
+USB or SPI. However the USB pins are only connected on the MacBookAir6
+and 7 and the MacBookPro12... UIEN and UIST are only provided on models
+where the USB pins are connected."
+
+Neither mode works under Linux on this machine, and the two failures
+appear independent:
+
+1. In USB mode (the firmware default under Linux), the internal xHCI
+   port never signals a device connection to the OS at all.
+2. In SPI mode (reachable only by manually invoking an ACPI method the
+   driver itself never calls when it finds USB active), applespi binds
+   successfully and reads its ACPI-provided timing parameters without
+   error, but actual SPI bus transfers time out and no input registers.
+
+Confirmed NOT a hardware fault: the same physical keyboard/trackpad work
+correctly when booted into macOS Internet Recovery Mode on this same
+machine, and work at both the GRUB and rEFInd boot-menu level (i.e.
+before Linux's kernel takes over).
+
+Part 1: USB mode never enumerates
+----------------------------------
+The port in question is usb1-port5 (ACPI path
+\_SB_.PCI0.XHC1.RHUB.HS05), reporting connect_type=hardwired. A sibling
+hardwired port on the same root hub, usb1-port3 (HS03, internal
+Bluetooth), enumerates and works correctly (confirmed functional at the
+Bluetooth protocol level, not just USB enumeration - paired and used an
+external Bluetooth keyboard through it).
+
+Enabled dynamic debug on drivers/usb/host/xhci-hub.c,
+drivers/usb/host/xhci-ring.c, drivers/usb/host/xhci.c, and
+drivers/usb/core/hub.c, then manually power-cycled usb1-port5 via its
+sysfs "disable" attribute to force a fresh connect attempt. portsc
+cleanly transitions (0x2a0 -> 0x80, i.e. power off -> power on), and the
+hub driver explicitly clears the port's connect-change and
+enable/disable-change bits - but Current Connect Status (CCS) never
+becomes 1, and no device-attach sequence ever begins. The xHC hardware
+itself never reports a connection on this port to the driver; this is
+not a case of Linux detecting the device and mishandling it.
+
+Ruled out for the USB-mode failure:
+- acpi_osi=Darwin boot parameter - no effect.
+- ACPI USBX/_DSM method - confirmed absent from this machine's actual
+  DSDT/SSDT tables (that mechanism is OpenCore/Hackintosh-injection-only,
+  not something real Apple firmware ships).
+- Per-port ACPI properties (_UPC/_PLD/MUXS) - no meaningful difference
+  between the working Bluetooth port (HS03) and the broken keyboard port
+  (HS05).
+- S3 suspend/resume (rtcwake -m mem) - no effect.
+- xHCI PCI-device unbind/rebind (0000:00:14.0) - no effect on this port
+  specifically, though external USB devices re-enumerate correctly
+  through the same controller.
+- The Apple "set_os" UEFI protocol call (AppleSetOsVersion/
+  AppleSetOsVendor) - a real, separate pre-kernel firmware mechanism from
+  ACPI _OSI, used by rEFInd (config key spoof_osx_version) and briefly by
+  Limine (a regression in v11.3.1 that broke internal keyboard/trackpad
+  on some other Mac models, reverted in v11.4.0 - see
+  https://github.com/CachyOS/distribution/issues/415). Tested via rEFInd
+  with spoof_osx_version set to 10.9, 10.12, and 10.15, and with it
+  disabled entirely, booting the kernel directly through rEFInd each
+  time. No effect in any configuration.
+- Reproduced identically on two independent installs and on both GRUB
+  and rEFInd, ruling out leftover configuration as the cause, and on
+  genuine mainline kernel 7.2.0-rc5, ruling out an Arch-specific kernel
+  patch or an already-fixed-upstream issue.
+
+Part 2: is MacBookPro12,1 actually a driver target, and if so, why do SPI
+transfers time out once switched on?
+------------------------------------------------------------------------
+applespi.c's own top-of-file comment lists MacBookPro12 among the models
+with USB pins connected, but the original submission's commit message
+(038b1a05eae6, "Input: add Apple SPI keyboard and trackpad driver")
+names only MacBook8,1-and-later and MacBookPro13,*/14,* as the driver's
+actual targets - MacBookPro12,* is not mentioned there, and I could not
+find any issue, PR, or commit across cb22/macbook12-spi-driver or
+roadrunner2/macbook12-spi-driver (its most active fork) discussing
+MacBookPro12,* specifically. So my first question is simply: was this
+model ever an intended target for this driver, or is the top-comment's
+mention of "MacBookPro12" a generalization/error? I don't want to assume
+either way.
+
+Separately, this machine's own real DSDT (decompiled via acpidump -b +
+iasl -d) does define working UIEN/UIST/SIEN/SIST ACPI methods under
+\_SB.PCI0.SPI1.SPIT, toggling real GPIO pin state (GD26/GP26 for USB,
+GD13/GP13 for SPI) - not a phantom or placeholder device, and not
+something injected by a third-party ACPI patch. applespi_probe() calls
+UIST, and on finding USB already active (as it is by default on this
+machine under Linux), returns -ENODEV immediately without ever calling
+SIEN. I understand from PR history (cb22/macbook12-spi-driver#2, "Re-
+enable SPI on resume", 2016) that this check's original purpose was to
+detect suspend/resume state, not to pick between two co-equal modes at
+cold boot, and that the underlying assumption is that firmware itself
+decides USB vs SPI. If that's correct, then on this machine firmware is
+choosing USB, and forcing SPI may be going against the intended design
+rather than fixing an oversight - which is why I tested it as an
+experiment rather than proposing it as a fix.
+
+Using the acpi_call-dkms module (/proc/acpi/call), manually invoked
+\_SB.PCI0.SPI1.SPIT.SIEN 1. This flips UIST to 0 and SIST to 1 (verified
+by reading both back), and usb1-port5's reported state changes from its
+previous no-state condition to a clean "not attached." After this,
+force-loading spi_pxa2xx_pci, spi_pxa2xx_platform, and applespi (bypassing
+a modprobe blacklist installed for unrelated reasons) results in applespi
+successfully binding and registering an input device for the first time
+in this investigation:
+  input: Apple SPI Keyboard as
+  /devices/pci0000:00/0000:00:15.4/spi_master/spi1/spi-APP000D:00/input/input20
+
+However, typing produces no input, and dmesg shows a continuous failure
+loop:
+  applespi spi-APP000D:00: SPI transfer timed out
+  applespi spi-APP000D:00: Error reading from device: -110
+  spi_master spi1: failed to transfer one message from queue
+
+Enabled dynamic debug on applespi.c (module applespi +p) and confirmed
+applespi_get_spi_settings() reads its three _DSM-provided timing
+properties (spiCSDelay, resetA2RUsec, resetRecUsec) without emitting any
+"property not found" warning - i.e. the ACPI-provided timing parameters
+are present and are being read successfully; the SPI bus still doesn't
+work.
+
+Ruled out for the SPI-mode failure:
+- Missing/incorrect _DSM timing parameters - confirmed read without
+  error.
+- Incorrect ACPI mode switch - confirmed UIST/SIST flip cleanly and the
+  driver successfully binds and registers an input device immediately
+  after.
+
+What would help
+----------------
+For Part 1 (linux-usb): any pointer to what firmware-level
+initialization step this internal, hardwired USB port may need that
+isn't currently happening during Linux's xHCI/USB bring-up, given the
+identical hardware works correctly under Apple's own firmware and in
+macOS Recovery Mode.
+
+For Part 2 (linux-input / applespi): (a) whether MacBookPro12,* was ever
+an intended target for this driver, given the discrepancy between the
+top-of-file comment and the original commit message described above;
+(b) if it was/is, whether applespi is expected to call SIEN(1) itself on
+models where it finds USB already active, rather than deferring with
+-ENODEV as it does now; and (c) either way, any pointer to what could
+cause SPI bus transfers to time out on this specific chipset once the
+mode switch and timing parameters are already confirmed correct - e.g.
+a clock-speed/protocol detail not captured by the _DSM properties
+applespi currently reads, or a chip-select/interrupt-line configuration
+issue specific to this board.
+
+Happy to provide ACPI table dumps, full DSDT, or run further
+dynamic-debug traces on request.
+
+Full dmesg (from the 7.2.0-rc5-1-mainline boot in USB mode) and this
+kernel's .config:
+https://gist.github.com/ajisrael/dddabb07fd4f8f3d17022cadc8dbb3ee
