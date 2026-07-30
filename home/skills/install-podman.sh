@@ -28,7 +28,15 @@ PODMAN_FORMULA_URL="https://raw.githubusercontent.com/Homebrew/homebrew-core/${P
 
 brew_bin="/usr/local/bin/brew"
 tap_name="local/podman-pin"
-tap_dir="$("$brew_bin" --repository)/Library/Taps/local/homebrew-podman-pin"
+# `brew --repository <tap>` (with an argument) reliably predicts this tap's
+# path even before it exists. Bare `brew --repository` (no argument) is NOT
+# equivalent - on this machine it resolves to nix-homebrew's
+# `.homebrew-is-managed-by-nix` marker directory instead of the real
+# Homebrew prefix, silently pointing curl/mkdir at a path Homebrew never
+# reads from. Dormant here only because this script's idempotency check
+# above already short-circuits on an up-to-date install - see
+# install-intellij-pin.sh's matching comment for how this surfaced.
+tap_dir="$("$brew_bin" --repository "$tap_name")"
 
 installed_version="$("$brew_bin" list --versions podman 2>/dev/null | /usr/bin/awk '{print $2}')"
 
