@@ -79,6 +79,17 @@
     enable = true;
     onActivation.cleanup = "none";
     onActivation.autoUpdate = true;
+    # onActivation.autoUpdate only toggles whether activation's `brew
+    # bundle` is allowed to auto-update at all - the actual throttle is
+    # Homebrew's own HOMEBREW_AUTO_UPDATE_SECS (default 24h), which nix-darwin
+    # threads through via onActivation.extraEnv into that same
+    # activation-time call. Once a month instead of once a day, so
+    # ./rebuild.sh doesn't re-pull a newer tap (and risk a fresh,
+    # possibly-incompatible recipe or a build from source, e.g. the herdr ->
+    # rust chain) on every run. Scoped to activation only - interactive
+    # `brew install`/`upgrade` in a terminal stay on Homebrew's normal
+    # cadence.
+    onActivation.extraEnv.HOMEBREW_AUTO_UPDATE_SECS = "2592000"; # 30 days
     brews = [ "nvm" "mongocli" "herdr" ];
     # GUI .app bundles stay on Homebrew casks (tier 2) for proper
     # /Applications integration, Spotlight visibility, and auto-update
