@@ -115,9 +115,19 @@
       # declarative install path.
       "claude-code"
 
+      # Google's Antigravity CLI (`agy`) - the documented successor to the
+      # Gemini CLI, which needed a paid plan. nixpkgs has `antigravity`
+      # (tier 1) but that's the GUI IDE, a different product; the CLI has no
+      # nixpkgs package in nixpkgs-26.05-darwin, so this stays on the
+      # Homebrew cask (tier 2). Cask DSL (on_arch_conditional /
+      # on_system_conditional) parses fine with nix-homebrew's pinned brew
+      # engine (2026-07-07), and the cask ships an Intel (darwin-x64)
+      # binary for this machine. Free tier works via Google account sign-in.
+
       # No nixpkgs equivalent, or GUI .app convention (deep system
       # integration like Docker Desktop's privileged helper/VM, or a
       # different product from any similarly-named nixpkgs package).
+      "antigravity-cli"
       "dbeaver-community"
       "flux-app"
       "open-design"
