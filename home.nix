@@ -81,6 +81,10 @@ in
     # Available as a nixpkgs package (tier 1) in nixpkgs-26.05-darwin.
     codex
 
+    # Google's Gemini CLI - AI coding agent for your terminal.
+    # Available as a nixpkgs package (tier 1) in nixpkgs-26.05-darwin.
+    gemini-cli
+
     # CLI for Architecture Decision Records (numbering, status/supersede
     # links, TOC generation) - paired with the `adr` skill below.
     adr-tools
