@@ -77,6 +77,10 @@ in
     treehousePackage
     no-mistakes
 
+    # OpenAI's Codex CLI - AI coding agent that runs in your terminal.
+    # Available as a nixpkgs package (tier 1) in nixpkgs-26.05-darwin.
+    codex
+
     # CLI for Architecture Decision Records (numbering, status/supersede
     # links, TOC generation) - paired with the `adr` skill below.
     adr-tools
