@@ -399,6 +399,12 @@ in
   home.file.".agents/skills/adr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/adr";
 
+  # mentor - hand-authored skill, same pattern as adr above.
+  home.file.".claude/skills/mentor".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/mentor";
+  home.file.".agents/skills/mentor".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/mentor";
+
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
   # canonical file, symlinked to every harness's expected location. A
   # plain live symlink via home.activation (not home.file) - same
