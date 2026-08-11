@@ -62,7 +62,6 @@ in
     git
     gnused
     go
-    kiro-cli
     maven
     mkcert
     pandoc
