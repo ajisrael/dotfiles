@@ -13,17 +13,23 @@ let
   # stable location instead.
   npmGlobalPrefix = "${config.home.homeDirectory}/.npm-global";
 
-  # `docker`/`docker-compose` shims onto `podman`/`podman compose` - podman
+  # `docker`/`docker-compose` shims onto `podman`/`podman-compose` - podman
   # itself lives on the Homebrew tier (see configuration.nix) rather than
   # here, but this keeps anything that shells out to a literal `docker`
   # binary (CDK's asset bundling, scripts, muscle memory) working
   # unchanged. Podman's CLI is Docker-API-compatible, so this is a
   # transparent rename rather than a behavior shim.
+  #
+  # The compose shim must exec the standalone `podman-compose` (also in
+  # home.packages below), NOT `podman compose` (the built-in subcommand,
+  # no hyphen) - that subcommand resolves an external compose provider by
+  # searching PATH, finds this very `docker-compose` shim, and re-execs it,
+  # forking itself without bound until the machine is killed by hand.
   dockerShim = pkgs.writeShellScriptBin "docker" ''
     exec podman "$@"
   '';
   dockerComposeShim = pkgs.writeShellScriptBin "docker-compose" ''
-    exec podman compose "$@"
+    exec podman-compose "$@"
   '';
 in
 
