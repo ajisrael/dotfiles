@@ -123,6 +123,36 @@ autoload -Uz add-zsh-hook
 add-zsh-hook chpwd __nvmrc_hook
 __nvmrc_hook
 
+# Custom P10k segment: java version from the nearest .sdkmanrc walking up
+# from $PWD, shown only when it differs from sdkman's global default -
+# same "only show when switched" spirit as the nvm segment above. Reads
+# .sdkmanrc directly (the actual file sdkman_auto_env parses) rather than
+# a .java-version file or $SDKMAN_ENV, so there's exactly one source of
+# truth for "what java does this project want" - see p10k.zsh's own
+# comment on why the built-in java_version segment doesn't work here
+# (no Ant/build.xml support, and no non-default-only gate to begin with).
+# Prefixed my_ per Powerlevel10k's own convention for custom segments
+# (avoids clashing with future built-in segment names).
+function prompt_my_java_version_sdkman() {
+  local dir="$PWD" pinned=""
+  while true; do
+    if [[ -f "$dir/.sdkmanrc" ]]; then
+      pinned="$(sed -nE 's/^[[:space:]]*java[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' "$dir/.sdkmanrc" | head -n1)"
+      break
+    fi
+    [[ "$dir" == "/" ]] && break
+    dir="${dir:h}"
+  done
+  [[ -n "$pinned" ]] || return
+
+  local default=""
+  [[ -n "$SDKMAN_DIR" ]] && default="$(readlink "$SDKMAN_DIR/candidates/java/current" 2>/dev/null)"
+  default="${default:t}"
+  [[ "$pinned" == "$default" ]] && return
+
+  p10k segment -f 3 -b 0 -i JAVA_ICON -r -t "$pinned"
+}
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 

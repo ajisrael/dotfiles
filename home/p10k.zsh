@@ -103,7 +103,13 @@
     # cpu_arch              # CPU architecture
     virtualenv              # active python virtual environment name (https://docs.python.org/3/library/venv.html)
     nvm                     # node.js version, only shown when nvm has switched it from default (https://github.com/nvm-sh/nvm)
-    java_version            # java version, only shown when JAVA_HOME/java on PATH differs (e.g. via sdkman) (https://www.java.com/)
+    # java_version is P10k's built-in segment - dropped in favor of the
+    # custom my_java_version_sdkman below. The built-in only detects
+    # Maven/Gradle/sbt/Clojure/Leiningen project markers (no Ant support,
+    # which hybris-workspace needs) and has no "only show when switched
+    # from default" gate the way nvm's segment does - see
+    # personal.zsh's my_java_version_sdkman definition for both fixes.
+    my_java_version_sdkman  # java version from .sdkmanrc, only shown when it differs from sdkman's global default
     time                    # current time
     # =========================[ Line #2 ]=========================
     newline
@@ -571,9 +577,11 @@
   # typeset -g POWERLEVEL9K_BACKGROUND_JOBS_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
   #######################[ direnv: direnv status (https://direnv.net/) ]########################
-  # Direnv color.
-  typeset -g POWERLEVEL9K_DIRENV_FOREGROUND=3
-  typeset -g POWERLEVEL9K_DIRENV_BACKGROUND=0
+  # Tokyo Night's cyan/grey (Ansi 6 / Ansi 8 in tokyonight-pkmn.json,
+  # grey also used by tmux.conf's pane-border-style) - same palette
+  # already used by tmux/iTerm2/Claude Code's theme on this machine.
+  typeset -g POWERLEVEL9K_DIRENV_FOREGROUND='#7dcfff'
+  typeset -g POWERLEVEL9K_DIRENV_BACKGROUND='#414868'
   # Custom icon.
   # typeset -g POWERLEVEL9K_DIRENV_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
@@ -1163,16 +1171,13 @@
   # Custom icon.
   # typeset -g POWERLEVEL9K_RBENV_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
-  ####################[ java_version: java version (https://www.java.com/) ]####################
-  # Java version color.
-  typeset -g POWERLEVEL9K_JAVA_VERSION_FOREGROUND=1
-  typeset -g POWERLEVEL9K_JAVA_VERSION_BACKGROUND=7
-  # Show java version only when in a java project subdirectory.
-  typeset -g POWERLEVEL9K_JAVA_VERSION_PROJECT_ONLY=true
-  # Show brief version.
-  typeset -g POWERLEVEL9K_JAVA_VERSION_FULL=false
+  ###########[ my_java_version_sdkman: java version from .sdkmanrc (custom segment) ]###########
+  # Same yellow-on-black colors the now-disabled direnv segment used -
+  # more readable than the built-in java_version segment's red-on-white.
+  typeset -g POWERLEVEL9K_MY_JAVA_VERSION_SDKMAN_FOREGROUND=3
+  typeset -g POWERLEVEL9K_MY_JAVA_VERSION_SDKMAN_BACKGROUND=0
   # Custom icon.
-  # typeset -g POWERLEVEL9K_JAVA_VERSION_VISUAL_IDENTIFIER_EXPANSION='⭐'
+  # typeset -g POWERLEVEL9K_MY_JAVA_VERSION_SDKMAN_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
   ###[ package: name@version from package.json (https://docs.npmjs.com/files/package.json) ]####
   # Package color.
