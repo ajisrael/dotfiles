@@ -12,6 +12,13 @@ export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
 # the per-user profile above.
 export PATH="/run/current-system/sw/bin:$PATH"
 
+# direnv's shell hook. home.nix's programs.direnv only installs the
+# binary + enables nix-direnv - it doesn't wire the hook into .zshrc,
+# since programs.zsh is deliberately off here (see the "Deliberately NOT
+# managing zsh" comment there), so this has to happen by hand, same as
+# the home-manager session vars sourced above.
+eval "$(direnv hook zsh)"
+
 # Preferred editor for local and remote sessions
 export EDITOR='nvim'
 

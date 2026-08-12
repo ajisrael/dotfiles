@@ -194,9 +194,9 @@ in
   # installed and working (independent git clones under ~/.oh-my-zsh) -
   # letting home-manager's programs.zsh/programs.starship also try to own
   # .zshrc/the prompt would fight with that instead of preserving it.
-  # direnv's shell hook is added via the personal.zsh fragment (Phase 5)
-  # using plain `eval "$(direnv hook zsh)"` instead of enableZshIntegration,
-  # for the same reason.
+  # direnv's shell hook is added via the personal.zsh fragment using plain
+  # `eval "$(direnv hook zsh)"` instead of enableZshIntegration, for the
+  # same reason.
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;

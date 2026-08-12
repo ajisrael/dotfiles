@@ -19,4 +19,12 @@ source "$HOME/dotfiles/home/zsh/personal.zsh"
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+# Redirected to /dev/null: sdkman-init.sh's sdkman_auto_env runs once,
+# unconditionally, the moment it's sourced (not just registered as a
+# chpwd hook for later) - so a project with a pre-existing .sdkmanrc
+# (e.g. hybris-workspace) prints "Using java version ... in this shell"
+# during this exact source call, which Powerlevel10k's instant prompt
+# flags as stray console output during zsh init. Only silences this one
+# startup announcement; later cd-triggered switches still print normally,
+# since those happen after the prompt is already up.
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh" > /dev/null
