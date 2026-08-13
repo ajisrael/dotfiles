@@ -280,13 +280,24 @@ in
   # later home-manager switch, stays idempotent. No KeepAlive: unlike
   # no-mistakes-daemon below, this launches a VM process that supervises
   # itself, it isn't a long-running foreground process for launchd to
-  # restart. Requires `podman machine init` to have been run once by hand
-  # first (creates the VM/downloads its image) - not declarative-friendly,
-  # so it isn't done here. Hardcoded /usr/local/bin (not
-  # config.homebrew.brewPrefix - that option lives on the nix-darwin
-  # config, not this home-manager one) matching this machine's pre-existing
-  # Intel Homebrew prefix - see configuration.nix's nix-homebrew.autoMigrate
-  # comment.
+  # restart. Hardcoded /usr/local/bin (not config.homebrew.brewPrefix - that
+  # option lives on the nix-darwin config, not this home-manager one)
+  # matching this machine's pre-existing Intel Homebrew prefix - see
+  # configuration.nix's nix-homebrew.autoMigrate comment.
+  #
+  # Two one-time manual prerequisites this LaunchAgent depends on, neither
+  # declarative-friendly enough to automate here:
+  #   1. `podman machine init` - creates the QEMU VM and downloads its image
+  #      (~1GB), so unattended activation would silently hang/fail a fresh
+  #      machine on first `./rebuild.sh`.
+  #   2. `sudo /usr/local/Cellar/podman/<version>/bin/podman-mac-helper
+  #      install` - installs the system helper that forwards the default
+  #      Docker API socket (/var/run/docker.sock) to podman, so
+  #      `docker`/`docker compose` work without setting DOCKER_HOST. Needs
+  #      root, which a home-manager activation script can't prompt for.
+  #      <version> must match install-podman.sh's PODMAN_VERSION.
+  # verify.sh checks for both (machine present, docker.sock forwarding) and
+  # fails loudly with the exact commands if either is missing.
   launchd.agents.podman-machine-start = {
     enable = true;
     config = {
