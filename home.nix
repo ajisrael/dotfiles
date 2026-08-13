@@ -53,6 +53,7 @@ in
     tmux
     tree
     wget
+    btop
     gnupg
     direnv
     nerd-fonts.hack
