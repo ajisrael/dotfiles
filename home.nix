@@ -66,6 +66,7 @@ in
     cmake
     gh
     git
+    git-lfs
     gnused
     go
     maven
