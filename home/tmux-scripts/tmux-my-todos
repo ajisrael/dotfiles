@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Toggles a "my-todos" window: vim ./todos.md on the left, lazygit on the
+# right, both rooted in ~/todo. Bound to <prefix>t in tmux.conf.
+#
+# - Not open anywhere -> create it in the current session.
+# - Open in the current session -> close it (toggle off).
+# - Open in a different session -> move it into the current session instead
+#   of creating a second copy.
+
+set -euo pipefail
+
+window_name="my-todos"
+todo_dir="$HOME/todo"
+
+current_session="$(tmux display-message -p '#{session_name}')"
+
+existing="$(tmux list-windows -a -f "#{==:#{window_name},${window_name}}" -F '#{session_name} #{window_id}' | head -n1)"
+
+if [[ -n "$existing" ]]; then
+	existing_session="${existing%% *}"
+	existing_window_id="${existing##* }"
+
+	if [[ "$existing_session" == "$current_session" ]]; then
+		tmux kill-window -t "$existing_window_id"
+		exit 0
+	fi
+
+	tmux move-window -s "$existing_window_id" -t "${current_session}:"
+	tmux select-window -t "$existing_window_id"
+	exit 0
+fi
+
+new_window_id="$(tmux new-window -d -P -F '#{window_id}' -n "$window_name" -c "$todo_dir")"
+left_pane="$(tmux display-message -p -t "$new_window_id" '#{pane_id}')"
+right_pane="$(tmux split-window -h -d -P -F '#{pane_id}' -t "$left_pane" -c "$todo_dir")"
+
+tmux send-keys -t "$left_pane" "vim ./todos.md" Enter
+tmux send-keys -t "$right_pane" "lazygit" Enter
+
+tmux select-window -t "$new_window_id"
