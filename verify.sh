@@ -141,6 +141,24 @@ check_symlink "~/.hammerspoon/init.lua" "*home/hammerspoon/init.lua"
 # python3.x binary rather than a stale/broken link.
 check_symlink "~/.local/bin/python" "*/bin/python3.*"
 
+section "Podman machine (home.nix's podman-machine-start LaunchAgent)"
+
+if command -v podman >/dev/null 2>&1; then
+  if podman machine list --format '{{.Name}}' 2>/dev/null | grep -q .; then
+    pass "'podman machine list' shows a machine"
+  else
+    fail "no podman machine found - run 'podman machine init' once by hand"
+  fi
+
+  if [ -S "/var/run/docker.sock" ]; then
+    pass "/var/run/docker.sock present and forwarding to podman"
+  else
+    fail "/var/run/docker.sock missing - run 'sudo \$(brew --prefix podman)/bin/podman-mac-helper install' once by hand"
+  fi
+else
+  fail "'podman' not on PATH, skipping podman machine checks"
+fi
+
 section "Homebrew packages (vendor/personal's own tier-2 list)"
 
 if command -v brew >/dev/null 2>&1; then
