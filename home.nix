@@ -191,6 +191,12 @@ in
   home.file.".config/herdr/config.toml".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/herdr/config.toml";
 
+  # btop's Tokyo Night theme is built in - just point it there.
+  # save_config_on_exit = false keeps btop from overwriting this tracked
+  # file with runtime state on quit.
+  home.file.".config/btop/btop.conf".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/btop/btop.conf";
+
   # Deliberately NOT managing zsh/the prompt through Nix. oh-my-zsh +
   # Powerlevel10k + zsh-autosuggestions/zsh-syntax-highlighting are already
   # installed and working (independent git clones under ~/.oh-my-zsh) -
