@@ -4,7 +4,7 @@
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
 - Never run `tmux kill-server` (or any command that tears down the whole tmux
   server, e.g. `killall tmux`).
-- When working in a project that has a remote repository, unless specified otherwise never write full system paths.
+- When working in a project that has a remote repository, unless specified otherwise, never write full system paths.
   Especially ones that contain the username. Paths should be relative to the project to allow
   for consistency when being used by others.
 - When making technical decisions, do not give much weight to development cost.
@@ -20,25 +20,17 @@
 
 Documents (ADRs, plans, PR descriptions) reference repositories the way a
 human would - a GitHub URL or `org/repo` name - so they stay meaningful
-outside this machine. But most of those repos also have a local clone
-here, which is faster and doesn't burn API calls: prefer reading the local
-clone over `gh`/`WebFetch`/the GitHub API whenever one exists.
+outside this machine.
 
-- **`~/examples/<repo>`** - open-source or third-party repos cloned for
-  reference (e.g. a dependency's source, a tool being evaluated). Before
-  fetching a public repo remotely for reference, check here too, and if a
-  repo you keep needing isn't there yet, clone it in rather than
-  re-fetching it repeatedly.
-- This directory is not guaranteed exhaustive or up to date - if a repo
-  isn't present, or the local clone looks stale for what you need, fall
-  back to `gh`/the GitHub API/`WebFetch` normally.
+Most of those repos also have a local clone: `~/examples/<repo>` is used for public repositories.
+Other private repos the user has access to would be found inside the parent directory of a project.
+
+Instead of using `gh`, or `WebFetch` by default, prefer to analyze the local clone to save on api calls.
+If a local clone doesn't exist ask the user for the preference to clone or not.
 
 ## Installation
 
-- Before installing anything globally on this machine (a CLI tool, GUI app, or
-  language runtime available system-wide - not a project-local install like
-  `npm install` inside a repo), read `~/.agents/instructions/INSTALLATIONS.md`
-  and follow its install-method priority order.
+- Before installing anything globally on this machine read `~/.agents/instructions/INSTALLATIONS.md`.
 
 ## Commits
 
@@ -50,22 +42,18 @@ clone over `gh`/`WebFetch`/the GitHub API whenever one exists.
 
 ## Maintaining this file and project-level agent context files
 
+Keep this file for knowledge useful to almost every future agent session.
+Do not repeat what the codebase already shows; point to the authoritative file, skill, command, or doc.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve every safety boundary and keep the always-loaded contract concise.
+
+Additionally:
+
 - Whenever you get course-corrected, made an incorrect assumption, or
-  discover something non-obvious (a gotcha, a hidden constraint, a
-  convention that isn't derivable from the code), add an entry to the
-  relevant agent context file - this one for machine-wide/cross-project
-  lessons, the project's own AGENTS.md/CLAUDE.md for project-specific ones.
-  The goal is so the next agent doesn't repeat the same mistake or have to
-  rediscover how this developer works.
-- Keep entries short. Concise enough to keep token overhead low,
-  but specific enough to still carry the "why", not just the
-  "what".
-- Every time you add an entry, re-skim the whole file and check whether it
-  has grown enough that a topic should be split into its own doc (like
-  `~/.agents/instructions/INSTALLATIONS.md`) and linked from here instead of
-  inlined.
-- Not every discovery belongs here, though. A decision that's architectural
-  (a hard-to-reverse choice about structure, a dependency, a data model, an
-  API boundary) - especially one that came out of weighing real
-  alternatives - belongs in that repo's ADR log instead of this file. See
-  the `adr` skill for when and how.
+  discover something non-obvious, add an entry to the relevant agent context file:
+    - this one for machine-wide/cross-project lessons
+    - the project's own AGENTS.md/CLAUDE.md for project-specific ones.
+  The goal is so the next agent doesn't repeat the same mistake or have to rediscover things already figured out.
+- Expand entries to a reference document (like `~/.agents/instructions/INSTALLATIONS.md`) when a
+  topic has grown in complexity for the notation or only needs to be considered under certain conditions.
+- Not every discovery belongs here, reference architectural decisions following the `adr` skill.
