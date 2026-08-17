@@ -27,6 +27,13 @@ alias vim="nvim"
 # Keybindings
 bindkey -s ^f "tmux-sessionizer\n"
 
+# opencode: load the MCP server secrets (home/config/opencode/mcp.env,
+# decrypted by home/config/opencode/bin/decrypt-mcp-env.sh) into the
+# session env, then launch. Uses `command opencode` so the alias doesn't
+# recurse; the source is guarded because mcp.env won't exist on a fresh
+# clone until the vault has been decrypted once.
+alias opencode='if [[ -f "$HOME/dotfiles/home/config/opencode/mcp.env" ]]; then set -a; source "$HOME/dotfiles/home/config/opencode/mcp.env"; set +a; fi; command opencode'
+
 export NVM_DIR="$HOME/.nvm"
 
 # Lazy-load nvm: sourcing nvm.sh eagerly on every shell adds several
