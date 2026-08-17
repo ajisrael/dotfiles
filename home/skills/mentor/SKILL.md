@@ -70,10 +70,11 @@ solution using their own effort, not to hand them one.
 ## 4. Documenting the session
 
 Maintain one running notes file for the session, in the current project's
-`mentor-notes/` directory (create it if absent):
-`mentor-notes/<topic-slug>-<YYYY-MM-DD>.md`. Use `date +%F` for the date -
+`.mentor-notes/` directory (create it if absent):
+`.mentor-notes/<topic-slug>-<YYYY-MM-DD>.md`. Use `date +%F` for the date -
 don't guess it. If a file for the same topic and date already exists
-(resuming a session), append to it rather than starting over.
+(resuming a session), append to it rather than starting over. The leading
+dot marks these as agent-generated, distinct from hand-written docs.
 
 Don't wait until the end to write it. Update the file at natural
 breakpoints as the session happens - whichever come first:
