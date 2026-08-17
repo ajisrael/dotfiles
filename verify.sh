@@ -141,6 +141,22 @@ check_symlink "~/.hammerspoon/init.lua" "*home/hammerspoon/init.lua"
 # python3.x binary rather than a stale/broken link.
 check_symlink "~/.local/bin/python" "*/bin/python3.*"
 
+section "opencode MCP secrets"
+
+mcp_vault="$DIR/home/config/opencode/mcp.env.vault"
+if [ ! -f "$mcp_vault" ]; then
+  fail "$mcp_vault missing"
+elif [ -f "$HOME/.vault_pass" ] && ansible-vault view --vault-password-file "$HOME/.vault_pass" "$mcp_vault" >/dev/null 2>&1; then
+  pass "home/config/opencode/mcp.env.vault present and decrypts with ~/.vault_pass"
+else
+  fail "home/config/opencode/mcp.env.vault present but does not decrypt with ~/.vault_pass"
+fi
+
+mcp_env="$DIR/home/config/opencode/mcp.env"
+if [ ! -f "$mcp_env" ]; then
+  warn "home/config/opencode/mcp.env missing - run home/config/opencode/bin/decrypt-mcp-env.sh before launching opencode with MCP servers"
+fi
+
 section "Podman machine (home.nix's podman-machine-start LaunchAgent)"
 
 if command -v podman >/dev/null 2>&1; then

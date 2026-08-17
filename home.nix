@@ -114,7 +114,7 @@ in
   ];
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "nvim";
-  home.sessionPath = [ "${dotfiles}/home/tmux-scripts" "${npmGlobalPrefix}/bin" ];
+  home.sessionPath = [ "${dotfiles}/home/tmux-scripts" "${npmGlobalPrefix}/bin" "${dotfiles}/home/config/opencode/bin" ];
 
   # `python` -> Nix's python313, so bare `python` works instead of needing
   # `python3`. ~/.local/bin is already on PATH.
@@ -178,11 +178,17 @@ in
   home.file."Library/Application Support/iTerm2/DynamicProfiles/tokyonight-pkmn.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/iterm2/tokyonight-pkmn.json";
 
-  # opencode's TUI prefs (vim keybinds, theme, plugin) - generic and
-  # personal, unlike opencode.json which holds machine/employer-specific
-  # provider and MCP config and is deliberately not managed here.
+  # opencode's TUI prefs (vim keybinds, theme, plugin).
   home.file.".config/opencode/tui.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/opencode/tui.json";
+
+  # opencode's MCP server config - personal projects (code-control,
+  # heimdall, dojo-pro*. MCP auth tokens are never in this file: the
+  # headers use {env:VAR} references resolved from
+  # home/config/opencode/mcp.env (gitignored, decrypted from the committed
+  # mcp.env.vault by home/config/opencode/bin/decrypt-mcp-env.sh).
+  home.file.".config/opencode/opencode.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/config/opencode/opencode.json";
 
   # Herdr - trying it out alongside tmux, not replacing it (see
   # configuration.nix's homebrew.brews comment for the install-tier

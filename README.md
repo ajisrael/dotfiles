@@ -113,6 +113,29 @@ it never rewrites the submodule's own history.
   curl -sL https://releases.nixos.org/nix/nix-2.24.10/install | sh -s -- --daemon
   ```
 
+## Secrets
+
+opencode's MCP server tokens for personal projects live in
+`home/config/opencode/mcp.env.vault`, encrypted with `ansible-vault`. The
+vault password (`~/.vault_pass`, chmod 600) is never committed - both this
+repo's and `dotfiles-amway`'s `.gitignore` block it explicitly.
+`opencode.json` never contains the tokens - the MCP headers reference them
+via `{env:VAR}` (e.g. `SONARQUBE_MCP_TOKEN`), resolved from the shell
+environment. After decrypting once, `personal.zsh`'s `opencode` alias
+sources `mcp.env` into the session env automatically before launching
+(opencode itself does not auto-load `.env`), so just run:
+
+```sh
+home/config/opencode/bin/decrypt-mcp-env.sh
+opencode
+```
+
+`mcp.env` (the decrypted plaintext) is gitignored - only `mcp.env.vault`
+is committed. To add or change a token: decrypt, edit `mcp.env`,
+re-encrypt with `ansible-vault encrypt --vault-password-file ~/.vault_pass
+--output home/config/opencode/mcp.env.vault home/config/opencode/mcp.env`,
+and commit the vault.
+
 ## Additional Setup Notes
 
 - When using Handy, Model that yields the best results is the canary 180M
