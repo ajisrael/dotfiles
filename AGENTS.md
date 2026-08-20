@@ -47,3 +47,8 @@ availability on the pinned branches next time flake.nix's inputs are
 bumped, and migrate to tier 1 (`home.packages` + `programs.herdr`) once
 it's there.
 
+## Working on TMUX Configurations
+
+When working on a `tmux` configuration or script, always opt to test changes
+against a separate tmux server instance/socket so as not to risk interfering
+with the current tmux server being used for active development.
