@@ -1,9 +1,14 @@
+# name: neovim
 vim .
 ---
+# name: zsh
 
 ---
+# name: zsh
 
 ---
+# name: lazygit
 lazygit
 ---
+# name: opencode
 opencode
