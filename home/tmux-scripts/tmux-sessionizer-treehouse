@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#
+# Treehouse-scoped variant of tmux-sessionizer: lists the current project's
+# root workspace, every treehouse worktree already in its pool, and an
+# option to lease a new one, in an fzf menu - then switches to (or creates)
+# a dedicated tmux session for whichever one is picked.
+#
+# Session names are "<project>" for the root workspace and
+# "<project>-tree-<slot>" for a treehouse worktree, so they can never
+# collide with each other or with the invoking session regardless of where
+# this script is run from.
+#
+# Worktrees leased here via "+ new worktree" get their session recorded in
+# a small state file so tmux-sessionizer-treehouse-cleanup (wired to the
+# session-closed hook in tmux.conf) can return the lease when that session
+# closes. Worktrees that already existed before this script touched them
+# are left alone on close - this tool only releases what it leased.
+
+set -uo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/tmux-sessionizer-lib.sh"
+
+state_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-sessionizer-treehouse"
+state_file="$state_dir/sessions.tsv"
+mkdir -p "$state_dir"
+
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+if [[ -z $git_common_dir ]]; then
+	echo "tmux-sessionizer-treehouse: not inside a git repository" >&2
+	exit 1
+fi
+root_workspace="${git_common_dir%/.git}"
+project_basename=$(basename "$root_workspace" | tr . _)
+
+status_json=$(treehouse status --json 2>/dev/null)
+[[ -z $status_json ]] && status_json="[]"
+
+fzf_lines=("${project_basename} (root)"$'\t'"root"$'\t'"$root_workspace"$'\t')
+while IFS=$'\t' read -r slot_name slot_path slot_status; do
+	[[ -z $slot_name ]] && continue
+	fzf_lines+=("${project_basename}-tree-${slot_name} [${slot_status}]"$'\t'"slot"$'\t'"$slot_path"$'\t'"$slot_name")
+done < <(echo "$status_json" | jq -r '.[] | [.name, .path, .status] | @tsv')
+fzf_lines+=("+ new worktree"$'\t'"new"$'\t'$'\t')
+
+selection=$(printf '%s\n' "${fzf_lines[@]}" | fzf --delimiter=$'\t' --with-nth=1)
+[[ -z $selection ]] && exit 0
+
+IFS=$'\t' read -r _label kind sel_path slot_name <<< "$selection"
+
+lease_label=""
+is_new_worktree=false
+
+case "$kind" in
+	root)
+		session_name="$project_basename"
+		target_dir="$root_workspace"
+		;;
+	slot)
+		session_name="${project_basename}-tree-${slot_name}"
+		target_dir="$sel_path"
+		;;
+	new)
+		lease_label="${project_basename}-tree-pending-$$"
+		get_json=$(treehouse get --lease --lease-holder "$lease_label" --json 2>/dev/null)
+		if [[ -z $get_json ]]; then
+			echo "tmux-sessionizer-treehouse: treehouse get --lease failed" >&2
+			exit 1
+		fi
+		new_path=$(echo "$get_json" | jq -r '.path')
+		slot_name=$(basename "$(dirname "$new_path")")
+		session_name="${project_basename}-tree-${slot_name}"
+		target_dir="$new_path"
+		is_new_worktree=true
+		;;
+	*)
+		exit 0
+		;;
+esac
+
+record_state() {
+	[[ $is_new_worktree == true ]] || return
+	grep -qF "${session_name}"$'\t' "$state_file" 2>/dev/null && return
+	printf '%s\t%s\t%s\t%s\n' "$session_name" "$root_workspace" "$target_dir" "$lease_label" >> "$state_file"
+}
+
+tmux_running=$(pgrep tmux)
+
+if [[ -z $TMUX ]]; then
+	if [[ -z $tmux_running ]] || ! tmux has-session -t "$session_name" 2>/dev/null; then
+		tmux new-session -d -s "$session_name" -c "$target_dir"
+		apply_session_config "$session_name" "$target_dir"
+	fi
+	record_state
+	tmux attach-session -t "$session_name"
+	exit 0
+fi
+
+if ! tmux has-session -t "$session_name" 2>/dev/null; then
+	tmux new-session -d -s "$session_name" -c "$target_dir"
+	apply_session_config "$session_name" "$target_dir"
+fi
+record_state
+tmux switch-client -t "$session_name"

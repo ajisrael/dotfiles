@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# Invoked by tmux.conf's session-closed hook as:
+#   tmux-sessionizer-treehouse-cleanup <closed_session_name>
+#
+# Fires for EVERY session close on the server (tmux has no way to scope
+# session-closed to one session at registration time), so this filters on
+# the session-name pattern tmux-sessionizer-treehouse uses for worktrees it
+# leased itself, then returns that lease. Sessions this tool didn't lease
+# (the root workspace, or a worktree that was already available/leased
+# before this tool touched it) have no state-file entry and are left alone.
+
+set -uo pipefail
+
+closed_session_name="${1:-}"
+[[ -z $closed_session_name ]] && exit 0
+[[ "$closed_session_name" == *-tree-* ]] || exit 0
+
+state_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-sessionizer-treehouse"
+state_file="$state_dir/sessions.tsv"
+[[ -f $state_file ]] || exit 0
+
+lock_dir="$state_dir/.lock"
+for _ in $(seq 1 50); do
+	mkdir "$lock_dir" 2>/dev/null && break
+	sleep 0.1
+done
+
+matched_line=$(grep -F "${closed_session_name}"$'\t' "$state_file" || true)
+if [[ -n $matched_line ]]; then
+	# grep -v exits 1 (not an error here) when every line is filtered out,
+	# e.g. removing the only line in the file - don't gate the mv on it.
+	grep -vF "$matched_line" "$state_file" > "$state_file.tmp"
+	mv "$state_file.tmp" "$state_file"
+fi
+
+rmdir "$lock_dir" 2>/dev/null
+
+[[ -z $matched_line ]] && exit 0
+
+IFS=$'\t' read -r _session root_workspace worktree_path lease_label <<< "$matched_line"
+
+(cd "$root_workspace" 2>/dev/null && treehouse return "$worktree_path" --if-lease-holder "$lease_label" --force) 2>/dev/null || true
+
+exit 0
