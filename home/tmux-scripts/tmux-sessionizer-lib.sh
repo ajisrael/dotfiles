@@ -5,19 +5,16 @@
 apply_session_config() {
 	local session="$1"
 	local dir="$2"
+	local config_lookup_dir="${3:-$dir}"
 	local script_dir
 	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-	# Prefer a project-local config, fall back to the default - projects
-	# under ~/learning get their own default (opencode instead of claude on
-	# the last window) since that's the assistant used there.
-	local config_file="$dir/.tmux-sessionizer-config"
+	# Prefer a project-local config (looked up in config_lookup_dir, which
+	# may differ from dir for worktrees where dir is under ~/.treehouse/ but
+	# config_lookup_dir is the real project root), fall back to the default.
+	local config_file="$config_lookup_dir/.tmux-sessionizer-config"
 	if [[ ! -f "$config_file" ]]; then
-		if [[ "$dir" == "$HOME/learning"/* || "$dir" == "$HOME/learning" ]]; then
-			config_file="$script_dir/.default-tmux-sessionizer-config-learning"
-		else
-			config_file="$script_dir/.default-tmux-sessionizer-config"
-		fi
+		config_file="$script_dir/.default-tmux-sessionizer-config"
 	fi
 
 	[[ ! -f "$config_file" ]] && return
