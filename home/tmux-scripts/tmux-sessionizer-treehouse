@@ -84,9 +84,9 @@ record_state() {
 	printf '%s\t%s\t%s\t%s\n' "$session_name" "$root_workspace" "$target_dir" "$lease_label" >> "$state_file"
 }
 
-tmux_running=$(pgrep tmux)
+tmux_running=$(pgrep tmux || true)
 
-if [[ -z $TMUX ]]; then
+if [[ -z ${TMUX:-} ]]; then
 	if [[ -z $tmux_running ]] || ! tmux has-session -t "$session_name" 2>/dev/null; then
 		tmux new-session -d -s "$session_name" -c "$target_dir"
 		apply_session_config "$session_name" "$target_dir" "$root_workspace"
