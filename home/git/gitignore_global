@@ -3,3 +3,4 @@ temp.md
 .claude/
 .tmux-sessionizer-config
 .lavish
+setup-local-env.sh
