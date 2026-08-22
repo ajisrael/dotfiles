@@ -19,6 +19,14 @@ apply_session_config() {
 
 	[[ ! -f "$config_file" ]] && return
 
+	# Project-local environment setup - sourced once per session creation so
+	# exported vars are available to all window commands (e.g. port assignments
+	# that vary per worktree). Globally gitignored.
+	local setup_script="$config_lookup_dir/setup-local-env.sh"
+	if [[ -x "$setup_script" ]]; then
+		source "$setup_script" "$dir" "$config_lookup_dir"
+	fi
+
 	# Parse panes: blocks separated by lines containing only "---"
 	local panes=()
 	local block=""
