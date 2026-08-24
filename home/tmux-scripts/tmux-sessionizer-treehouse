@@ -61,6 +61,39 @@ case "$kind" in
 		target_dir="$sel_path"
 		;;
 	new)
+		# --- Branch selection via fzf ---
+		# Collect branches already checked out by a worktree so we can mark them.
+		declare -A worktree_branches=()
+		while IFS= read -r wt_branch; do
+			[[ -n $wt_branch ]] && worktree_branches["$wt_branch"]=1
+		done < <(git worktree list --porcelain | awk '/^branch refs\/heads\//{sub("branch refs/heads/", ""); print}')
+
+		# Build fzf list: local branches with a marker if in use, plus new-branch option.
+		branch_lines=()
+		while IFS= read -r branch; do
+			[[ -z $branch ]] && continue
+			if [[ -n ${worktree_branches["$branch"]+x} ]]; then
+				branch_lines+=("$branch (worktree)")
+			else
+				branch_lines+=("$branch")
+			fi
+		done < <(git for-each-ref --sort=-committerdate --format='%(refname:short)' refs/heads/)
+		branch_lines+=("+ create new branch")
+
+		branch_selection=$(printf '%s\n' "${branch_lines[@]}" | fzf --header="Select branch for new worktree")
+		[[ -z $branch_selection ]] && exit 0
+
+		if [[ $branch_selection == "+ create new branch" ]]; then
+			printf "New branch name: "
+			read -r new_branch_name
+			[[ -z $new_branch_name ]] && exit 0
+		else
+			# Strip the "(worktree)" marker if present
+			new_branch_name=""
+			checkout_branch="${branch_selection% (worktree)}"
+		fi
+
+		# Lease the worktree slot
 		lease_label="${project_basename}-tree-pending-$$"
 		get_json=$(treehouse get --lease --lease-holder "$lease_label" --json 2>/dev/null)
 		if [[ -z $get_json ]]; then
@@ -72,6 +105,21 @@ case "$kind" in
 		session_name="${project_basename}-tree-${slot_name}"
 		target_dir="$new_path"
 		is_new_worktree=true
+
+		# Check out or create the branch in the new worktree
+		if [[ -n $new_branch_name ]]; then
+			git -C "$target_dir" checkout -b "$new_branch_name" || {
+				echo "tmux-sessionizer-treehouse: failed to create branch '$new_branch_name'" >&2
+				treehouse return "$target_dir" 2>/dev/null
+				exit 1
+			}
+		else
+			git -C "$target_dir" checkout "$checkout_branch" || {
+				echo "tmux-sessionizer-treehouse: failed to checkout branch '$checkout_branch'" >&2
+				treehouse return "$target_dir" 2>/dev/null
+				exit 1
+			}
+		fi
 		;;
 	*)
 		exit 0
