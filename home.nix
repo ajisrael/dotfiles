@@ -318,7 +318,7 @@ in
       ProgramArguments = [
         "${pkgs.bash}/bin/bash"
         "-c"
-        "/usr/local/bin/podman machine start || true"
+        "/usr/local/bin/podman machine stop 2>/dev/null; /usr/local/bin/podman machine start || true"
       ];
       RunAtLoad = true;
       StandardOutPath = "${config.home.homeDirectory}/Library/Logs/podman-machine-start.out.log";
