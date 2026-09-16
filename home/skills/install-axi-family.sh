@@ -43,8 +43,8 @@ installAxiPkg() {
   bash "$sync_script" "$npm_bin" "$pkg" "$skillName" "${skills_dir}/${skillName}"
 }
 
-installAxiPkg gh-axi 0.1.27 gh-axi
-installAxiPkg chrome-devtools-axi 0.1.26 chrome-devtools-axi
-installAxiPkg lavish-axi 0.1.42 lavish
+installAxiPkg gh-axi 0.1.35 gh-axi
+installAxiPkg chrome-devtools-axi 0.1.34 chrome-devtools-axi
+installAxiPkg lavish-axi 0.1.71 lavish
 installAxiPkg tasks-axi 0.2.5 tasks-axi
-installAxiPkg quota-axi 0.1.15 quota-axi
+installAxiPkg quota-axi 0.1.45 quota-axi
