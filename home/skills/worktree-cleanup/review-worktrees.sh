@@ -10,21 +10,26 @@
 #   Worktrees  - uncommitted changes, unpushed commits, and Treehouse's own
 #                view (leased / running process / available).
 #
-# This script NEVER mutates anything (no branch/worktree deletion, no reset).
-# `git fetch --prune` is the only network/ref-touching action and is opt-in
-# via --fetch. Acting on the report (deleting branches, pruning worktrees) is
-# the agent's job, done interactively with the user - not this script's.
+# This script does not delete branches or worktrees and never resets. The one
+# ref-touching action is `git fetch --prune`, which runs by DEFAULT: the whole
+# point of a cleanup pass is to reconcile local state against the real remote,
+# so stale remote-tracking refs are pruned up front before anything is judged
+# "merged". Pass --no-fetch to skip it and stay fully read-only/offline.
+# Acting on the report (deleting branches, pruning worktrees) is the agent's
+# job, done interactively with the user - not this script's.
 #
 # Usage:
-#   review-worktrees.sh [--repo <path>] [--target <branch>] [--fetch] [--json]
+#   review-worktrees.sh [--repo <path>] [--target <branch>] [--no-fetch] [--json]
 #
 #   --repo <path>     Repository to review. Default: current directory.
 #   --target <branch> Integration branch to test "merged?" against.
 #                     Default: develop (falls back to origin/develop). If
 #                     neither resolves, the script exits non-zero and asks
 #                     the caller to pass --target explicitly.
-#   --fetch           Run `git fetch --prune` first (network; prunes dead
-#                     remote-tracking refs). Off by default to stay read-only.
+#   --no-fetch        Skip the default `git fetch --prune` and stay fully
+#                     read-only/offline (e.g. no network, or you just fetched).
+#   --fetch           Explicitly fetch first. This is already the default;
+#                     accepted for backward compatibility / clarity.
 #   --json            Emit machine-readable JSON instead of the text report.
 #
 # Exit codes: 0 ok, 1 usage/target-resolution error, 2 not a git repo.
@@ -33,17 +38,18 @@ set -euo pipefail
 
 repo="."
 target=""
-do_fetch=0
+do_fetch=1
 as_json=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --repo)   repo="${2:?--repo needs a path}"; shift 2 ;;
-    --target) target="${2:?--target needs a branch}"; shift 2 ;;
-    --fetch)  do_fetch=1; shift ;;
-    --json)   as_json=1; shift ;;
+    --repo)     repo="${2:?--repo needs a path}"; shift 2 ;;
+    --target)   target="${2:?--target needs a branch}"; shift 2 ;;
+    --fetch)    do_fetch=1; shift ;;
+    --no-fetch) do_fetch=0; shift ;;
+    --json)     as_json=1; shift ;;
     -h|--help)
-      sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "review-worktrees.sh: unknown argument: $1" >&2; exit 1 ;;
   esac

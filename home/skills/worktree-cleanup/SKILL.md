@@ -38,17 +38,20 @@ calls the resolved branch `<target>`.
 
 ## Phase 1-3 - Gather and report state (use the companion script)
 
-A companion script does all the read-only gathering in one pass so you do
-not have to orchestrate the git/treehouse plumbing by hand. It **never
-mutates anything** - no deletes, no resets; `git fetch --prune` is the only
-ref-touching action and is opt-in via `--fetch`.
+A companion script does all the state gathering in one pass so you do not
+have to orchestrate the git/treehouse plumbing by hand. It never deletes or
+resets anything. Its one ref-touching action is `git fetch --prune`, which
+**runs by default** - the whole point of a cleanup pass is to reconcile local
+state against the real remote, so stale remote-tracking refs get pruned up
+front before anything is judged "merged". Pass `--no-fetch` to skip it and
+stay fully read-only/offline.
 
 ```sh
 # The script lives next to this SKILL.md. Depending on the harness that is:
 #   ~/.kiro/skills/worktree-cleanup/review-worktrees.sh   (Kiro)
 #   ~/.claude/skills/worktree-cleanup/review-worktrees.sh (Claude Code)
 #   ~/.agents/skills/worktree-cleanup/review-worktrees.sh (generic)
-review-worktrees.sh --repo <repo> [--target develop] [--fetch]
+review-worktrees.sh --repo <repo> [--target develop] [--no-fetch]
 ```
 
 - `--repo <repo>` - the project to review (defaults to the current directory).
@@ -56,8 +59,10 @@ review-worktrees.sh --repo <repo> [--target develop] [--fetch]
   Defaults to `develop`, falling back to `origin/develop`. If neither
   resolves the script exits non-zero and asks you to pass `--target`; relay
   that to the user and ask which branch is the integration target.
-- `--fetch` - refresh remotes and prune dead remote-tracking refs first.
-  Offer this to the user; it is the one action that reaches the network.
+- `--no-fetch` - skip the default `git fetch --prune` and stay offline. Use
+  when there is no network, or you just fetched and want to avoid the round
+  trip. Warn that "merged?" may then reflect stale remote-tracking refs.
+  (`--fetch` still exists as an explicit no-op alias for the default.)
 - `--json` - machine-readable output if you would rather parse it than read
   the text tables.
 
@@ -99,6 +104,7 @@ branches and worktrees to clean up and which to keep.
 If the script is unavailable, the underlying commands are:
 
 ```sh
+git -C <repo> fetch --prune                                                           # default: sync + prune dead remotes (skip only if offline)
 git -C <repo> for-each-ref --format='%(refname:short)%09%(worktreepath)' refs/heads   # branch -> worktree
 git -C <repo> worktree list --porcelain                                               # incl. detached
 git -C <repo> branch --merged <target>; git -C <repo> branch -r --merged <target>     # true merges
@@ -172,6 +178,9 @@ this skill starts from a known state.
 
 - **Report before you act.** Gather and present full state; the user chooses
   disposition; only then clean up.
+- **Sync before you judge.** The review script runs `git fetch --prune` by
+  default so "merged?" reflects the real remote, not stale tracking refs;
+  only `--no-fetch` (offline) skips it, and then say the state may be stale.
 - **`develop` is the assumed target** unless the user says otherwise; resolve
   it concretely (local, else `origin/`) and ask if it does not exist.
 - **Detect squash-merges**, not just fast-forward merges - a merged PR usually
