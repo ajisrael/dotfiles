@@ -429,6 +429,16 @@ in
   home.file.".agents/skills/adr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/adr";
 
+  # worktree-cleanup - hand-authored skill, same pattern as adr above.
+  # Iterative confirm-first playbook for reclaiming Treehouse pool
+  # worktrees and the merged local/remote git branches left behind after
+  # parallel-agent work lands on a mainline. Single SKILL.md, but symlink
+  # the whole directory to match adr so future companion files come along.
+  home.file.".claude/skills/worktree-cleanup".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/worktree-cleanup";
+  home.file.".agents/skills/worktree-cleanup".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/worktree-cleanup";
+
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
   # canonical file, symlinked to every harness's expected location. A
   # plain live symlink via home.activation (not home.file) - same
