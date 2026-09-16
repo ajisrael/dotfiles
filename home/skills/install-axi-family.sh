@@ -46,5 +46,5 @@ installAxiPkg() {
 installAxiPkg gh-axi 0.1.27 gh-axi
 installAxiPkg chrome-devtools-axi 0.1.26 chrome-devtools-axi
 installAxiPkg lavish-axi 0.1.42 lavish
-installAxiPkg tasks-axi 0.2.3 tasks-axi
+installAxiPkg tasks-axi 0.2.5 tasks-axi
 installAxiPkg quota-axi 0.1.15 quota-axi
