@@ -36,118 +36,76 @@ If neither exists, do not guess - ask the user which branch is the
 integration target (some projects use `main` or `master`). Everything below
 calls the resolved branch `<target>`.
 
-## Phase 1 - Review every branch (local and remote)
+## Phase 1-3 - Gather and report state (use the companion script)
 
-For each branch - local and remote - determine two things:
-
-1. **Merged?** Are its changes already in `<target>`?
-2. **Checked out?** Is it currently checked out by a worktree, and which one?
-
-### Which branches exist
+A companion script does all the read-only gathering in one pass so you do
+not have to orchestrate the git/treehouse plumbing by hand. It **never
+mutates anything** - no deletes, no resets; `git fetch --prune` is the only
+ref-touching action and is opt-in via `--fetch`.
 
 ```sh
-git -C <repo> fetch --prune                    # refresh; drop dead remote-tracking refs
-git -C <repo> branch                            # local branches
-git -C <repo> branch -r                         # remote branches
+# The script lives next to this SKILL.md. Depending on the harness that is:
+#   ~/.kiro/skills/worktree-cleanup/review-worktrees.sh   (Kiro)
+#   ~/.claude/skills/worktree-cleanup/review-worktrees.sh (Claude Code)
+#   ~/.agents/skills/worktree-cleanup/review-worktrees.sh (generic)
+review-worktrees.sh --repo <repo> [--target develop] [--fetch]
 ```
 
-### Is a branch checked out by a worktree, and where
+- `--repo <repo>` - the project to review (defaults to the current directory).
+- `--target <branch>` - integration branch to test "merged?" against.
+  Defaults to `develop`, falling back to `origin/develop`. If neither
+  resolves the script exits non-zero and asks you to pass `--target`; relay
+  that to the user and ask which branch is the integration target.
+- `--fetch` - refresh remotes and prune dead remote-tracking refs first.
+  Offer this to the user; it is the one action that reaches the network.
+- `--json` - machine-readable output if you would rather parse it than read
+  the text tables.
 
-`%(worktreepath)` is empty when the branch is not checked out anywhere:
+The script prints two tables. **Branches**: each local and remote branch with
+its merged status (`merged`, `merged(squash)`, `unmerged`, or `is-target`)
+and which worktree, if any, has it checked out. **Worktrees**: each worktree
+with counts of uncommitted changes, unpushed commits, and stashes, plus
+Treehouse's own state (`available`, `leased`, `in-use`).
 
-```sh
-git -C <repo> for-each-ref \
-  --format='%(refname:short)%09%(worktreepath)' refs/heads
-```
+It detects **squash-merges** (via `git cherry`), not just fast-forward
+merges - important because a merged PR usually leaves a branch whose tip is
+not an ancestor of the target, which a plain `git branch --merged` would
+wrongly call unmerged.
 
-Treehouse worktrees frequently run on a **detached HEAD** (no branch), so
-also map worktrees to commits directly and reconcile the two:
+Caveats to keep in mind when reading the output:
 
-```sh
-git -C <repo> worktree list --porcelain
-```
+- The stash count is **repo-global** (git stashes are not per-worktree), so
+  every worktree row shows the same number - read it as "the repo has N
+  stashes to check", not "this worktree has N".
+- `unmerged` is the safe default when squash status is ambiguous. Do not
+  assert an `unmerged` branch is disposable.
 
-A branch with a non-empty worktree path is **in use** - flag it; do not treat
-it as freely deletable even if merged, because a worktree still points at it.
+**Report to the user**: relay the two tables (or a tidied version), covering
+every branch and every worktree - including the clean, safe-to-remove ones -
+so they see the whole picture. Add a recommendation column based on the
+signals:
 
-### Is a branch merged into the target
+- branch merged + not checked out → safe to delete
+- branch merged + checked out by a worktree → free that worktree first
+- branch unmerged → keep (flag for attention)
+- worktree clean + idle + unleased (and on a merged/detached branch) → safe to remove
+- worktree with uncommitted / unpushed / leased / in-use → keep, say why
 
-Two cases, because a merged PR is usually **squash-merged**, which
-`--merged` does not detect:
-
-```sh
-# True/fast-forward merges - branches whose tip is an ancestor of <target>:
-git -C <repo> branch --merged <target>
-git -C <repo> branch -r --merged <target>
-```
-
-For branches **not** listed there, check whether their work was
-**squash-merged** (their commits landed as a single squashed commit on
-`<target>`, so the branch tip is not an ancestor). `git cherry` marks commits
-already present in the target with `-`:
-
-```sh
-git -C <repo> cherry <target> <branch>          # all lines start with '-' => already in target
-```
-
-If every line is prefixed `-`, the branch's changes are in `<target>` even
-though `--merged` did not list it - classify it **merged (squashed)**. If some
-lines start with `+`, those commits are not in the target yet - classify it
-**not merged** and say so. When squash-merge status is genuinely ambiguous,
-report it as "unmerged / needs verification" rather than asserting it is safe.
-
-## Phase 2 - Review every worktree for uncommitted work
-
-For each worktree (from `git worktree list`), check whether it has changes
-that were never committed to its checked-out branch - work that would be
-**lost** if the worktree were destroyed:
-
-```sh
-git -C <worktree-path> status --porcelain       # non-empty => uncommitted changes
-git -C <worktree-path> stash list                # stashes are easy to forget
-```
-
-Also note worktrees whose HEAD has commits not yet on any remote (unpushed
-work), since destroying those loses commits too:
-
-```sh
-git -C <worktree-path> log --branches --not --remotes --oneline | head
-```
-
-`treehouse status` shows the pool's own view (leased, in-use, running
-processes) - fold that in so the report also says whether Treehouse considers
-each worktree busy:
-
-```sh
-treehouse status                                 # run from inside <repo>
-```
-
-## Phase 3 - Report the full state
-
-Present a clear, per-item report the user can act on. Cover **every** branch
-and **every** worktree - including the clean, safe-to-remove ones - so the
-user sees the whole picture, not just the problems. A table per section works
-well:
-
-**Branches**
-
-| branch | local/remote | merged into `<target>`? | checked out by worktree | recommendation |
-| ------ | ------------ | ----------------------- | ----------------------- | -------------- |
-
-- merged + not checked out → safe to delete
-- merged + checked out → free the worktree first, then delete
-- not merged → keep (or flag for the user's attention)
-
-**Worktrees**
-
-| worktree | branch / detached | uncommitted changes | unpushed commits | treehouse state | recommendation |
-| -------- | ----------------- | ------------------- | ---------------- | --------------- | -------------- |
-
-- clean, merged, idle, unleased → safe to remove
-- dirty / unpushed / leased / in-use → keep, and say exactly why
-
-State recommendations, but do not act on them. End by asking the user which
+State recommendations but **do not act**. End by asking the user which
 branches and worktrees to clean up and which to keep.
+
+### Doing it by hand (fallback)
+
+If the script is unavailable, the underlying commands are:
+
+```sh
+git -C <repo> for-each-ref --format='%(refname:short)%09%(worktreepath)' refs/heads   # branch -> worktree
+git -C <repo> worktree list --porcelain                                               # incl. detached
+git -C <repo> branch --merged <target>; git -C <repo> branch -r --merged <target>     # true merges
+git -C <repo> cherry <target> <branch>          # all '-' lines => squash-merged
+git -C <wt> status --porcelain; git -C <wt> log --branches --not --remotes --oneline  # dirty / unpushed
+treehouse status                                 # pool state (run in <repo>)
+```
 
 ## Phase 4 - Clean up what the user chose
 
