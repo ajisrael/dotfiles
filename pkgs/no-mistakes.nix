@@ -11,21 +11,24 @@
 
 buildGoModule rec {
   pname = "no-mistakes";
-  version = "1.37.0";
+  version = "1.77.0";
 
   src = fetchFromGitHub {
     owner = "kunchenguid";
     repo = "no-mistakes";
     tag = "v${version}";
-    hash = "sha256-gNxnW73qGIdO4j8P6gkpvW1WOtUO2gpFgNf9Dhhx6BA=";
+    hash = "sha256-A86AqF0MDqn4qw9xvMjfucgNoetUWd4wb3+4OxNk46Q=";
   };
 
-  vendorHash = "sha256-NZOYxNYvt4192uqKBdKRxdgrKFvWx3585psdCnRdPSM=";
+  vendorHash = "sha256-maAVBptEtdrGanJHwAPAmuGBorzIMUgK6T+NmIz1kS0=";
 
   subPackages = [ "cmd/no-mistakes" ];
 
+  # Upstream moved its version variable to internal/buildinfo (was main.version
+  # in older releases); the package's own version.go documents this exact
+  # ldflags path. Without it the binary reports "dev" instead of the tag.
   ldflags = [
-    "-X main.version=v${version}"
+    "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v${version}"
   ];
 
   # Upstream's own test suite expects network access and live git-fixture
