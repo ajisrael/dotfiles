@@ -1,186 +1,225 @@
 ---
 name: worktree-cleanup
-description: Iteratively clean up Treehouse pool worktrees and the local/remote git branches left behind after parallel-agent work merges back into a mainline (develop/main/master). Use when the user asks to clean up / prune / tidy worktrees or branches, says the repo has accumulated stale worktrees or merged branches after running agents in parallel, or invokes /worktree-cleanup.
+description: Per-project review and cleanup of git branches and Treehouse worktrees left behind after parallel-agent work merges into a target branch (default develop). Reviews every local and remote branch (merged into target? checked out by a worktree?) and every worktree (uncommitted changes?), reports the full state, and cleans up only what the user picks. Use when the user asks to clean up / prune / review worktrees or branches, or invokes /worktree-cleanup.
 user-invocable: true
 ---
 
 # worktree-cleanup
 
-A safe, confirm-first playbook for reclaiming the two things that pile up
-when you run multiple agents in parallel with
-[Treehouse](https://github.com/kunchenguid/treehouse) worktrees and then merge their work back into a mainline branch:
+A **per-project**, **report-first** workflow for reclaiming the branches and
+[Treehouse](https://github.com/kunchenguid/treehouse) worktrees that pile up
+when you run multiple agents in parallel and then merge their work into a
+target branch.
 
-1. **Treehouse pool worktrees** - the numbered, pre-warmed worktrees under
-   `~/.treehouse/<repo>-<hash>/<n>/<repo>`, managed by the `treehouse` CLI.
-2. **Git branches** - the local branches (and their remote counterparts)
-   the agents pushed, now merged and dead weight.
+The flow is always: **gather full state → report to the user → wait for the
+user to choose what to keep vs. remove → then act.** You never
+propose-and-delete in one motion. Present the complete picture of every
+branch and every worktree first; the user decides disposition per item; only
+then do you clean up.
 
-These are *separate* cleanup targets with separate tools. A Treehouse
-worktree usually runs on a **detached HEAD**, so destroying the worktree
-does **not** delete the branch, and deleting the branch does **not** free
-the worktree. This skill walks both, in order, one repo at a time.
+Run this against **one project at a time** - the repo the user is in or names.
+This is not a machine-wide sweep.
 
-Treehouse is the source of truth for worktree state; plain `git` is the
-source of truth for branch state. Never `rm -rf` a worktree directory or
-hand-edit `.git/worktrees` - always go through `treehouse` so the pool
-metadata stays consistent.
+## The target branch
+
+Work merges back into a **target branch**, which defaults to **`develop`**
+(the project's usual default branch). Assume `develop` unless the user says
+otherwise. Resolve it concretely before judging anything as merged:
+
+```sh
+# Prefer a local target branch; fall back to the remote-tracking one.
+git -C <repo> rev-parse --verify --quiet develop \
+  || git -C <repo> rev-parse --verify --quiet origin/develop
+```
+
+If neither exists, do not guess - ask the user which branch is the
+integration target (some projects use `main` or `master`). Everything below
+calls the resolved branch `<target>`.
+
+## Phase 1 - Review every branch (local and remote)
+
+For each branch - local and remote - determine two things:
+
+1. **Merged?** Are its changes already in `<target>`?
+2. **Checked out?** Is it currently checked out by a worktree, and which one?
+
+### Which branches exist
+
+```sh
+git -C <repo> fetch --prune                    # refresh; drop dead remote-tracking refs
+git -C <repo> branch                            # local branches
+git -C <repo> branch -r                         # remote branches
+```
+
+### Is a branch checked out by a worktree, and where
+
+`%(worktreepath)` is empty when the branch is not checked out anywhere:
+
+```sh
+git -C <repo> for-each-ref \
+  --format='%(refname:short)%09%(worktreepath)' refs/heads
+```
+
+Treehouse worktrees frequently run on a **detached HEAD** (no branch), so
+also map worktrees to commits directly and reconcile the two:
+
+```sh
+git -C <repo> worktree list --porcelain
+```
+
+A branch with a non-empty worktree path is **in use** - flag it; do not treat
+it as freely deletable even if merged, because a worktree still points at it.
+
+### Is a branch merged into the target
+
+Two cases, because a merged PR is usually **squash-merged**, which
+`--merged` does not detect:
+
+```sh
+# True/fast-forward merges - branches whose tip is an ancestor of <target>:
+git -C <repo> branch --merged <target>
+git -C <repo> branch -r --merged <target>
+```
+
+For branches **not** listed there, check whether their work was
+**squash-merged** (their commits landed as a single squashed commit on
+`<target>`, so the branch tip is not an ancestor). `git cherry` marks commits
+already present in the target with `-`:
+
+```sh
+git -C <repo> cherry <target> <branch>          # all lines start with '-' => already in target
+```
+
+If every line is prefixed `-`, the branch's changes are in `<target>` even
+though `--merged` did not list it - classify it **merged (squashed)**. If some
+lines start with `+`, those commits are not in the target yet - classify it
+**not merged** and say so. When squash-merge status is genuinely ambiguous,
+report it as "unmerged / needs verification" rather than asserting it is safe.
+
+## Phase 2 - Review every worktree for uncommitted work
+
+For each worktree (from `git worktree list`), check whether it has changes
+that were never committed to its checked-out branch - work that would be
+**lost** if the worktree were destroyed:
+
+```sh
+git -C <worktree-path> status --porcelain       # non-empty => uncommitted changes
+git -C <worktree-path> stash list                # stashes are easy to forget
+```
+
+Also note worktrees whose HEAD has commits not yet on any remote (unpushed
+work), since destroying those loses commits too:
+
+```sh
+git -C <worktree-path> log --branches --not --remotes --oneline | head
+```
+
+`treehouse status` shows the pool's own view (leased, in-use, running
+processes) - fold that in so the report also says whether Treehouse considers
+each worktree busy:
+
+```sh
+treehouse status                                 # run from inside <repo>
+```
+
+## Phase 3 - Report the full state
+
+Present a clear, per-item report the user can act on. Cover **every** branch
+and **every** worktree - including the clean, safe-to-remove ones - so the
+user sees the whole picture, not just the problems. A table per section works
+well:
+
+**Branches**
+
+| branch | local/remote | merged into `<target>`? | checked out by worktree | recommendation |
+| ------ | ------------ | ----------------------- | ----------------------- | -------------- |
+
+- merged + not checked out → safe to delete
+- merged + checked out → free the worktree first, then delete
+- not merged → keep (or flag for the user's attention)
+
+**Worktrees**
+
+| worktree | branch / detached | uncommitted changes | unpushed commits | treehouse state | recommendation |
+| -------- | ----------------- | ------------------- | ---------------- | --------------- | -------------- |
+
+- clean, merged, idle, unleased → safe to remove
+- dirty / unpushed / leased / in-use → keep, and say exactly why
+
+State recommendations, but do not act on them. End by asking the user which
+branches and worktrees to clean up and which to keep.
+
+## Phase 4 - Clean up what the user chose
+
+Act only on the user's explicit selection, one item at a time. Match the tool
+to the target.
+
+### Remove a worktree (Treehouse)
+
+Always go through `treehouse`, never `rm -rf` a worktree dir or hand-edit
+`.git/worktrees`. Every removal is a dry run until `--yes`:
+
+```sh
+treehouse prune                     # dry-run: the safe set (merged, clean, idle, unleased)
+treehouse prune --yes               # execute, after the user OK's the previewed list
+
+treehouse destroy <worktree-path>            # dry-run for one specific worktree
+treehouse destroy <worktree-path> --yes      # execute
+```
+
+For a worktree the safe pass skips, add only the `--include-*` flag matching
+the risk the user explicitly accepted for that worktree:
+
+| Skip reason      | Flag                 | Meaning                                     |
+| ---------------- | -------------------- | ------------------------------------------- |
+| dirty / unmerged | `--include-unlanded` | **DATA LOSS** - uncommitted/unmerged work   |
+| running process  | `--include-in-use`   | processes terminated cleanly first          |
+| leased           | `--include-leased`   | only with exact path named, never via `--all` |
+
+`--include-unlanded` is the highest-caution flag: name the worktree and what
+would be lost, and get explicit confirmation before running it. To release a
+leased/idle worktree cleanly instead of destroying it: `treehouse return <path>`.
+
+### Delete a branch
+
+```sh
+# Local - safe delete; -d refuses if not merged into the CURRENT branch,
+# so this is a real check. Never -D unless the user accepts losing commits.
+git -C <repo> branch -d <branch>
+
+# Remote - affects a shared system; confirm exact remote + branch first.
+git -C <repo> push <remote> --delete <branch>
+```
+
+If `git branch -d` refuses a branch you reported as squash-merged, that is
+expected (its tip is not an ancestor of the current branch). Confirm with the
+user, then use `-D` for that specific branch - do not silently force it.
+
+Free a worktree before deleting the branch it has checked out (Phase 4
+worktree step first, then the branch).
+
+## Phase 5 - Verify and close out
+
+```sh
+git -C <repo> worktree list        # only worktrees the user meant to keep remain
+git -C <repo> branch -vv           # locals down to target + still-active work
+treehouse status
+```
+
+Summarize what was removed (branches, worktrees, remote branches) and what was
+kept and why (unmerged, dirty, unpushed, leased, in-use), so the next run of
+this skill starts from a known state.
 
 ## Golden rules
 
-- **Dry-run first, always.** `treehouse prune` and `treehouse destroy` are
-  dry runs by default and print a risk-revealing preview. Show the user
-  that preview and get an explicit go-ahead before re-running with `--yes`.
-- **Never force past a safety class without naming it.** The `--include-*`
-  flags each opt into a specific risk (unlanded work, in-use worktrees,
-  leased worktrees). Only add the exact flag the user approved for the
-  exact worktree in question - never a blanket override.
-- **Merged-ness is judged against the mainline the user names**, not
-  assumed. Confirm which branch is the integration target
-  (`develop`, `main`, `master`, ...) before deleting anything as "merged."
-- **One repo at a time.** Run the loop in the repo the user means. Only
-  reach for the global sweep (`treehouse prune --all`) when the user
-  explicitly asks to clean every pool on the machine.
-- **Iterate, don't bulldoze.** Work through candidates in passes, letting
-  the user veto individual items, rather than clearing everything at once.
-
-## Step 0 - Orient
-
-Confirm the repo and its integration branch before touching anything.
-
-```sh
-git -C <repo> rev-parse --show-toplevel        # confirm which repo
-git -C <repo> branch -vv                        # local branches + tracking
-treehouse status                                # pool worktrees (run in repo)
-```
-
-Ask the user which branch work merges back into if it is not obvious from
-`git branch -vv` (a repo with `develop` tracked and several feature
-branches merged into it, for example). That branch is the `<mainline>`
-referenced throughout.
-
-## Step 1 - Return anything you still hold, then prune the safe set
-
-`treehouse prune` removes only genuinely stale worktrees: treehouse-managed,
-no owner reservation or running process, clean working tree, and HEAD
-already merged into the default branch. It is the low-risk first pass.
-
-```sh
-treehouse prune                 # dry run - prints candidates, deletes nothing
-```
-
-Review the printed candidates with the user, then execute:
-
-```sh
-treehouse prune --yes           # delete the listed candidates
-```
-
-If a worktree you want gone is skipped, the dry-run output says *why*
-(in use, leased, dirty, unmerged). Do not immediately escalate - surface
-the reason to the user first. Common resolutions:
-
-- **In use / lingering process** - if the work is truly done, return it:
-  `treehouse return <path>` (add `--force` only with the user's OK; it
-  terminates processes and resets the worktree).
-- **Leased** - a durable reservation from `treehouse get --lease`. Release
-  it with `treehouse return <path>` when the user confirms it is finished.
-- **Orphaned** (backing repo gone) - include with
-  `treehouse prune --prune-orphans --yes` once confirmed.
-
-## Step 2 - Destroy specific stubborn worktrees (opt-in risk)
-
-When a *specific* worktree needs to go even though prune skipped it, use
-`destroy`. It targets one worktree path (or `--all` within one named pool)
-and is also a dry run until `--yes`.
-
-```sh
-treehouse destroy <worktree-path>          # dry-run preview for one worktree
-```
-
-Then add only the flag matching the risk the user accepted, plus `--yes`:
-
-| Skip reason         | Flag to add            | What it means                                   |
-| ------------------- | ---------------------- | ----------------------------------------------- |
-| dirty / unmerged    | `--include-unlanded`   | **DATA LOSS** - uncommitted or unmerged work    |
-| running process     | `--include-in-use`     | processes are terminated cleanly first          |
-| leased              | `--include-leased`     | only with the exact path named, never via `--all` |
-
-```sh
-treehouse destroy <worktree-path> --include-unlanded --yes   # only if user OK'd data loss
-```
-
-Treat `--include-unlanded` as the highest-caution flag: name what would be
-lost (which worktree, that it has uncommitted or unmerged commits) and get
-explicit confirmation before running it.
-
-## Step 3 - Delete merged local branches
-
-With worktrees handled, clean the branches. First list what has actually
-merged into the integration branch, excluding the mainlines themselves:
-
-```sh
-git -C <repo> branch --merged <mainline> \
-  | grep -vE '^\*|(^|\s)(main|master|develop)$'
-```
-
-Show that list to the user. Delete the approved ones with the safe flag
-(`-d` refuses to delete an unmerged branch; never reach for `-D` unless the
-user explicitly accepts losing unmerged commits):
-
-```sh
-git -C <repo> branch -d <branch> [<branch> ...]
-```
-
-A branch that `-d` refuses is not actually merged into `<mainline>` - stop
-and tell the user rather than forcing it. It may have merged into a
-*different* mainline, or its work may still be live.
-
-## Step 4 - Prune remote-tracking refs and delete remote branches
-
-After branches merge and are deleted on the remote (e.g. by a merged PR),
-your local remote-tracking refs go stale. Prune them, then find any
-still-live remote branches that are now redundant.
-
-```sh
-git -C <repo> fetch --prune                     # drop stale remote-tracking refs
-git -C <repo> branch -vv | grep ': gone]'       # locals whose upstream is gone
-```
-
-Branches marked `: gone]` had their remote deleted already - their local
-counterpart is safe to remove once merged (Step 3 handles that; a `gone`
-local that is also merged is a clear delete candidate).
-
-To delete a remote branch that is still present but merged, confirm the
-remote and branch with the user, then:
-
-```sh
-git -C <repo> push <remote> --delete <branch>   # deletes the branch on the remote
-```
-
-Deleting a remote branch affects a shared system. Always confirm the exact
-remote and branch names with the user first, and never batch-delete remote
-branches without showing the full list and getting a go-ahead.
-
-## Step 5 - Verify and report
-
-```sh
-treehouse status              # pool should show only worktrees you meant to keep
-git -C <repo> branch -vv      # locals should be down to mainlines + active work
-```
-
-Summarize what was removed (worktrees, local branches, remote branches) and
-what was intentionally kept and why (leased, dirty, still active), so the
-next pass starts from a known state.
-
-## Doing it again next time
-
-This is meant to be run regularly. Each pass:
-
-1. `treehouse status` + `git branch -vv` to see the accumulation.
-2. `treehouse prune` (dry run) → review → `--yes`.
-3. Named `treehouse destroy` for stubborn ones the user approves.
-4. `git branch --merged <mainline>` → review → `git branch -d`.
-5. `git fetch --prune`, then delete redundant remote branches with the
-   user's OK.
-
-Keep every destructive step confirm-first. The whole point is to reclaim
-space without ever losing work the user still wanted.
+- **Report before you act.** Gather and present full state; the user chooses
+  disposition; only then clean up.
+- **`develop` is the assumed target** unless the user says otherwise; resolve
+  it concretely (local, else `origin/`) and ask if it does not exist.
+- **Detect squash-merges**, not just fast-forward merges - a merged PR usually
+  leaves a branch that `--merged` will not list.
+- **Never destroy work.** A worktree with uncommitted or unpushed changes, or
+  a not-merged branch, is kept unless the user explicitly accepts the loss.
+- **Worktrees via `treehouse`, branches via `git`** - never `rm -rf` a
+  worktree, and free an in-use worktree before deleting its branch.
+- **One project at a time**, and every destructive step is confirm-first.
