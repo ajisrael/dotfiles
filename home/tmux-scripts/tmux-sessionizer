@@ -20,21 +20,9 @@ fi
 # I.E. we replace . with _
 session_name=$(basename "$selected" | tr . _)
 
-# check to see if there is a tmux server running
-tmux_running=$(pgrep tmux)
-
-# If we are not in tmux ($TMUX is set by tmux when in a session) and tmux isn't running,
-# then create a new session and exit
-if [[ -z $TMUX ]]; then
-	if [[ -z $tmux_running ]] || ! tmux has-session -t "$session_name" 2> /dev/null; then
-		tmux new-session -s $session_name -c $selected
-	else
-		tmux attach-session -t $session_name
-	fi
-	exit 0
-fi
-
-# If there isn't an existing session for what we've selected then create a new detatched session
+# Ensure the target session exists (created detached so this works whether or
+# not we currently have a client - e.g. when invoked from `tmux run-shell`,
+# which has no controlling terminal and does NOT set $TMUX).
 if ! tmux has-session -t "$session_name" 2> /dev/null; then
 # Note: If has-session is running on a session that doesn't exist it will put a message to sout
 # we use the 2> to pipe that into the garbage can '/dev/null'
@@ -42,8 +30,21 @@ if ! tmux has-session -t "$session_name" 2> /dev/null; then
 	apply_session_config "$session_name" "$selected"
 fi
 
-# Switch to the existing or newly created client
-tmux switch-client -t "$session_name"
+# Now hand off to the session. The right verb depends on whether we already
+# have a tmux client attached to this terminal - NOT on $TMUX alone:
+#   - $TMUX set  -> we're inside a tmux client: switch it.
+#   - $TMUX unset but there IS an attached client -> we're being driven from
+#     `run-shell`/a keybinding with no TTY of our own: switch that client
+#     instead of trying to attach (attach would fail "not a terminal").
+#   - $TMUX unset and NO attached client -> we're a real standalone terminal:
+#     attach normally.
+if [[ -n $TMUX ]]; then
+	tmux switch-client -t "$session_name"
+elif tmux list-clients 2> /dev/null | grep -q .; then
+	tmux switch-client -t "$session_name"
+else
+	tmux attach-session -t "$session_name"
+fi
 
 # Scenarios
 #

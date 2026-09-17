@@ -132,21 +132,17 @@ record_state() {
 	printf '%s\t%s\t%s\t%s\n' "$session_name" "$root_workspace" "$target_dir" "$lease_label" >> "$state_file"
 }
 
-tmux_running=$(pgrep tmux || true)
-
-if [[ -z ${TMUX:-} ]]; then
-	if [[ -z $tmux_running ]] || ! tmux has-session -t "$session_name" 2>/dev/null; then
-		tmux new-session -d -s "$session_name" -c "$target_dir"
-		apply_session_config "$session_name" "$target_dir" "$root_workspace"
-	fi
-	record_state
-	tmux attach-session -t "$session_name"
-	exit 0
-fi
-
+# Ensure the session exists (detached), then hand off. Decide switch vs attach
+# by whether a client is actually attached - not $TMUX alone - so this works
+# from a keybinding/run-shell (no TTY, $TMUX unset) as well as from a real
+# standalone terminal. See tmux-sessionizer for the full rationale.
 if ! tmux has-session -t "$session_name" 2>/dev/null; then
 	tmux new-session -d -s "$session_name" -c "$target_dir"
 	apply_session_config "$session_name" "$target_dir" "$root_workspace"
 fi
 record_state
-tmux switch-client -t "$session_name"
+if [[ -n ${TMUX:-} ]] || tmux list-clients 2>/dev/null | grep -q .; then
+	tmux switch-client -t "$session_name"
+else
+	tmux attach-session -t "$session_name"
+fi
