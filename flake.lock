@@ -98,28 +98,7 @@
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs",
-        "treehouse": "treehouse"
-      }
-    },
-    "treehouse": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1784576200,
-        "narHash": "sha256-QtjDNcGOHaOBGefwdQ2huW+uf1A6EizhgyJLC2YxkjY=",
-        "owner": "kunchenguid",
-        "repo": "treehouse",
-        "rev": "c0b7f685d4511eec765ab4cbb47583178424eb45",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kunchenguid",
-        "repo": "treehouse",
-        "type": "github"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

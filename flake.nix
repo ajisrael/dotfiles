@@ -13,17 +13,9 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
-
-    # Pooled git-worktree manager for parallel agent work
-    # (https://github.com/kunchenguid/treehouse). Ships its own flake output
-    # rather than a nixpkgs package, so it's consumed as an input, same
-    # pattern as nix-homebrew above - gives flake.lock-pinned, content-
-    # addressed installs with no runtime fetch.
-    treehouse.url = "github:kunchenguid/treehouse";
-    treehouse.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, treehouse }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }:
     let
       user = "changeme";
       # Must be a plain string, not a Nix path literal - a path literal
@@ -31,12 +23,18 @@
       # breaking the live-editable-symlink model these dotfiles rely on.
       personalDotfilesDir = "/Users/${user}/dotfiles";
       system = "x86_64-darwin";
+      # Pooled git-worktree manager for parallel agent work
+      # (https://github.com/kunchenguid/treehouse). A pinned buildGoModule
+      # derivation, not a flake input - so its version lives in dotfiles and
+      # propagates to dotfiles-amway via git subtree. See pkgs/treehouse.nix
+      # and docs/adr for why.
+      treehousePackage =
+        nixpkgs.legacyPackages.${system}.callPackage ./pkgs/treehouse.nix { };
     in
     {
       darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
         specialArgs = {
-          inherit user personalDotfilesDir;
-          treehousePackage = treehouse.packages.${system}.default;
+          inherit user personalDotfilesDir treehousePackage;
         };
         modules = [
           ./configuration.nix
@@ -51,8 +49,7 @@
             # the whole activation.
             home-manager.backupFileExtension = "backup";
             home-manager.extraSpecialArgs = {
-              inherit user personalDotfilesDir;
-              treehousePackage = treehouse.packages.${system}.default;
+              inherit user personalDotfilesDir treehousePackage;
             };
             home-manager.users.${user} = import ./home.nix;
           }
