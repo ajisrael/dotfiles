@@ -61,6 +61,7 @@ in
     # Migrated from Homebrew (tier 1: Nix) - verified available in
     # nixpkgs-26.05-darwin. mongocli is the one confirmed exception with
     # no nixpkgs package; it stays on Homebrew (tier 2).
+    actionlint
     ansible
     awscli2
     cloudflared
@@ -73,6 +74,7 @@ in
     maven
     mkcert
     pandoc
+    shellcheck
     sonar-scanner-cli
     stow
     tldr
