@@ -1,0 +1,55 @@
+# Make an interactive bash shell self-sufficient: establish the same Nix
+# profile PATH and home-manager session vars a zsh session gets via
+# home/zsh/personal.zsh. A clean interactive bash (bash -ic) sources this
+# file but otherwise inherits none of that environment, so without this it
+# only has whatever PATH it was launched with - it can't find Nix-installed
+# tools, node/npm, etc. on its own. This mirrors personal.zsh's env setup,
+# reusing only its shell-agnostic logic (no bindkey/add-zsh-hook/${var:h}/p10k).
+
+# Nix/home-manager's per-user profile and session vars (PATH additions
+# declared in home.nix, EDITOR, etc). programs.bash is not managed by
+# home-manager here (same reasoning as programs.zsh in home.nix), so this
+# sourcing has to happen by hand rather than via a home-manager-generated hook.
+export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
+[ -f "$HOME/.local/state/home-manager/gcroots/current-home/home-path/etc/profile.d/hm-session-vars.sh" ] && \
+  source "$HOME/.local/state/home-manager/gcroots/current-home/home-path/etc/profile.d/hm-session-vars.sh"
+
+# nix-darwin's system-wide profile (darwin-rebuild, etc), separate from
+# the per-user profile above.
+export PATH="/run/current-system/sw/bin:$PATH"
+
+# direnv's shell hook. home.nix's programs.direnv only installs the binary
+# + enables nix-direnv - it doesn't wire the hook into any bash rc, so this
+# has to happen by hand, same as the home-manager session vars sourced above.
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook bash)"
+
+# Preferred editor for local and remote sessions.
+export EDITOR='nvim'
+
+alias vim="nvim"
+
+export NVM_DIR="$HOME/.nvm"
+
+# Lazy-load nvm: sourcing nvm.sh eagerly on every shell adds several
+# seconds (nvm_auto version resolution plus its bash-completion shim).
+# Load it for real only the first time nvm/node/npm/npx is actually invoked.
+#
+# IMPORTANT: the loader helper's name MUST keep its double-underscore
+# prefix. Agent harnesses (Claude Code and others) snapshot shell functions
+# for non-interactive tool calls and filter out single-underscore-prefixed
+# names (treated as completion functions) while explicitly keeping
+# double-underscore names. A single-underscore `_load_nvm` gets silently
+# dropped from the snapshot while the node/npm/npx/nvm shims below (kept -
+# no leading underscore) still call it, so at snapshot time the helper is
+# "command not found" and each shim falls through to calling itself:
+# infinite recursion. Renaming back to a single underscore reintroduces
+# that bug in every agent shell.
+__load_nvm() {
+  unset -f nvm node npm npx __load_nvm
+  [ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+}
+nvm() { __load_nvm; nvm "$@"; }
+node() { __load_nvm; node "$@"; }
+npm() { __load_nvm; npm "$@"; }
+npx() { __load_nvm; npx "$@"; }
