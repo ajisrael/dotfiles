@@ -122,15 +122,15 @@ in
     source = "${pkgs.python313}/bin/python3";
   };
 
-  # zsh/tmux/git/ssh - tracked here so a fresh clone + darwin-rebuild switch
-  # reproduces them exactly, instead of relying on hand-edits that silently
-  # go stale (as happened to all four across a prior repo rename). Still
+  # zsh/bash/tmux/git/ssh - tracked here so a fresh clone + darwin-rebuild
+  # switch reproduces them exactly, instead of relying on hand-edits that
+  # silently go stale (as happened across a prior repo rename). Still
   # deliberately NOT using home-manager's own
-  # programs.zsh/programs.git/programs.ssh modules - same reasoning as the
-  # comment below about not fighting the existing oh-my-zsh + Powerlevel10k
-  # setup.
+  # programs.zsh/programs.bash/programs.git/programs.ssh modules - same
+  # reasoning as the comment below about not fighting the existing
+  # oh-my-zsh + Powerlevel10k setup.
   #
-  # .zshrc/.tmux.conf/.gitconfig/.ssh/config specifically are plain live
+  # .zshrc/.bashrc/.tmux.conf/.gitconfig/.ssh/config specifically are plain live
   # symlinks via home.activation (not home.file), same reasoning as
   # installAgentsFile above: a downstream work-specific profile repo may
   # regenerate these same paths with its own merged content on every
@@ -143,6 +143,7 @@ in
   home.activation.installShellConfigFiles = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD mkdir -p "$HOME/.ssh"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/zsh/zshrc" "$HOME/.zshrc"
+    $DRY_RUN_CMD ln -sfn "${dotfiles}/home/bash/bashrc" "$HOME/.bashrc"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/tmux.conf" "$HOME/.tmux.conf"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/git/gitconfig" "$HOME/.gitconfig"
     $DRY_RUN_CMD ln -sfn "${dotfiles}/home/ssh/rootconfig" "$HOME/.ssh/config"
