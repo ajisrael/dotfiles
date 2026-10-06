@@ -372,6 +372,27 @@ in
     fi
   '';
 
+  # acpx - headless CLI client for the Agent Client Protocol (ACP), npm
+  # package `acpx` (openclaw/acpx, MIT). Tier 3 by elimination: no nixpkgs
+  # package (`nix search nixpkgs acpx` empty) and no Homebrew formula - npm
+  # is its only distribution channel. Same pinned-version, idempotent npm
+  # global-install shape as installOpencode above (reinstall only when the
+  # installed version doesn't match the pin); npmGlobalPrefix already puts
+  # its binary on PATH, no separate PATH export needed. It spawns the
+  # upstream agent CLIs it wraps, so keep nodejs on PATH for any that shell
+  # out to a bare `node`, same as installOpencode. Bump the pin by hand
+  # here rather than via acpx's own self-update, so this block stays the
+  # single source of truth for the installed version.
+  home.activation.installAcpx = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    export NPM_CONFIG_PREFIX="${npmGlobalPrefix}"
+    export PATH="${pkgs.nodejs}/bin:$PATH"
+    installed="$( ("${pkgs.nodejs}/bin/npm" ls -g --depth=0 --json acpx 2>/dev/null || true) \
+      | "${pkgs.jq}/bin/jq" -r '.dependencies.acpx.version // ""')"
+    if [ "$installed" != "0.19.4" ]; then
+      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g acpx@0.19.4
+    fi
+  '';
+
   # Local skill files, kept in sync with each pinned axi-family package by
   # the installAxiFamily activation block above - symlinked into both
   # Claude Code's and the generic ~/.agents/skills/ convention so other
