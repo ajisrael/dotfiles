@@ -463,6 +463,16 @@ in
   home.file.".agents/skills/worktree-cleanup".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/worktree-cleanup";
 
+  # update-software - hand-authored skill, same whole-directory pattern as
+  # adr/worktree-cleanup above (it has a companion audit.sh beside its
+  # SKILL.md). Audits this repo's version-pinned software (flake inputs,
+  # treehouse, pinned npm globals, podman/intellij, declared Homebrew
+  # brews/casks) and drives the per-item bump workflow the user picks.
+  home.file.".claude/skills/update-software".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/update-software";
+  home.file.".agents/skills/update-software".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/update-software";
+
   # Global agent policy file (kunchenguid's home/AGENTS.md pattern) - one
   # canonical file, symlinked to every harness's expected location. A
   # plain live symlink via home.activation (not home.file) - same
