@@ -44,3 +44,15 @@ sleepDisableMenu:setClickCallback(toggleDisableSleep)
 updateMenuIcon(isSleepDisabled())
 
 hs.hotkey.bind({ "cmd", "alt", "ctrl" }, "S", toggleDisableSleep)
+
+-- Optional machine-local extension. If ~/.hammerspoon/work.lua exists, load
+-- it after the base config. A generic extension point - this file stays
+-- agnostic about what the extra config is; whatever drops a work.lua there
+-- owns its content. Absent on a machine without one, this is a no-op.
+local workFile = os.getenv("HOME") .. "/.hammerspoon/work.lua"
+if hs.fs.attributes(workFile) then
+  local ok, err = pcall(dofile, workFile)
+  if not ok then
+    hs.printf("work.lua failed to load: %s", tostring(err))
+  end
+end
