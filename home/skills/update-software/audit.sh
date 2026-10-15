@@ -17,8 +17,20 @@
 # script location so it works both in ~/dotfiles and when vendored elsewhere.
 set -uo pipefail
 
-# Repo root = two levels up from home/skills/update-software/audit.sh.
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# Repo root. This script is deployed as a symlink into the agent harnesses'
+# skill dirs (~/.claude/skills, ~/.agents/skills, ...), so ${BASH_SOURCE[0]}
+# is that symlink path, NOT the real file - walking up from it lands outside
+# the repo. Resolve the real path first (readlink -f follows the whole
+# mkOutOfStoreSymlink chain back into the repo), then go up three levels
+# (home/skills/update-software/audit.sh -> repo root). An explicit root may
+# also be passed as $1, which a superset repo uses to point this at its
+# vendored copy's root.
+if [ -n "${1:-}" ]; then
+  REPO_ROOT="$1"
+else
+  _self="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+  REPO_ROOT="$(cd "$(dirname "$_self")/../../.." && pwd)"
+fi
 
 # ---- column helpers --------------------------------------------------------
 # A row is: <name> <pinned> <latest> <where> <how-to-bump-pointer>
