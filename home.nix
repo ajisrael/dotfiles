@@ -367,8 +367,8 @@ in
     export PATH="${pkgs.nodejs}/bin:$PATH"
     installed="$( ("${pkgs.nodejs}/bin/npm" ls -g --depth=0 --json opencode-ai 2>/dev/null || true) \
       | "${pkgs.jq}/bin/jq" -r '.dependencies."opencode-ai".version // ""')"
-    if [ "$installed" != "1.18.7" ]; then
-      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g opencode-ai@1.18.7
+    if [ "$installed" != "1.19.0" ]; then
+      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g opencode-ai@1.19.0
     fi
   '';
 
@@ -388,8 +388,8 @@ in
     export PATH="${pkgs.nodejs}/bin:$PATH"
     installed="$( ("${pkgs.nodejs}/bin/npm" ls -g --depth=0 --json acpx 2>/dev/null || true) \
       | "${pkgs.jq}/bin/jq" -r '.dependencies.acpx.version // ""')"
-    if [ "$installed" != "0.19.4" ]; then
-      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g acpx@0.19.4
+    if [ "$installed" != "0.19.5" ]; then
+      $DRY_RUN_CMD "${pkgs.nodejs}/bin/npm" install -g acpx@0.19.5
     fi
   '';
 
