@@ -52,3 +52,26 @@ it's there.
 When working on a `tmux` configuration or script, always opt to test changes
 against a separate tmux server instance/socket so as not to risk interfering
 with the current tmux server being used for active development.
+
+## Keep the update-software audit in sync with new pinning mechanisms
+
+`home/skills/update-software/audit.sh` inventories the version-pinned
+software this repo manages. It does NOT hardcode versions - every pinned
+version is read live out of the repo file that defines it (`flake.lock`,
+`pkgs/treehouse.nix`, the `*@version` strings in `home.nix`, the
+`install-*.sh` scripts), and the declared Homebrew brews/casks are parsed
+live from `configuration.nix`'s `brews`/`casks` lists. So two kinds of
+change need NO audit edit:
+
+- Bumping an existing pin's version (that's read fresh every run).
+- Adding a package to an existing mechanism - another `installAxiPkg` line,
+  another entry in `configuration.nix`'s `brews`/`casks`.
+
+What the script DOES encode structurally is the set of pinning *mechanisms*
+and how to read each one. So when you introduce a NEW mechanism - a new
+`pkgs/<name>.nix` pinned derivation, a new `home.activation` block that
+`npm install -g`s a pinned package, a new `install-*.sh` that pins a tool -
+add a matching block to `audit.sh` in the same run, so the new pin shows up
+in the audit instead of silently going untracked. The script's section
+comments show the shape to copy.
+
