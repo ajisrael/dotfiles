@@ -91,6 +91,12 @@ is one `installAxiPkg <pkg> <version> <skill>` line. Edit the version field.
 The same script also regenerates each tool's SKILL.md on the next switch, so
 the binary and its skill update together - no manual re-copy.
 
+Because that regeneration rewrites the deployed `home/skills/<tool>/SKILL.md`
+in place, those files can show up as modified on their own after a `./rebuild.sh`
+- even when nobody bumped a version here (the axi CLIs refresh their own skill
+text). Treat such a diff as a real content change and commit it, the same as any
+other edit to a tracked file.
+
 ### podman (`home/skills/install-podman.sh`) - usually leave frozen
 
 `PODMAN_VERSION` is pinned to the last Intel-compatible release on purpose;
