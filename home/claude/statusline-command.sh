@@ -111,3 +111,18 @@ fi
 if [ -n "$cost_display" ]; then
   printf " \033[2m|${reset} ${cost_color}%s${reset}" "$cost_display"
 fi
+
+# Optional extra segment. If $CLAUDE_STATUSLINE_EXTRA points at an executable,
+# run it with the same statusline JSON on stdin and append its stdout as one
+# more "|"-separated segment (only when it prints something non-empty). A
+# generic extension point - this script stays agnostic about what the extra
+# segment is; whatever provides the hook owns its content and its own
+# colors/formatting. The extra command must be fast and non-blocking (it runs
+# on every statusline render); anything slow should cache and refresh in the
+# background on its own.
+if [ -n "${CLAUDE_STATUSLINE_EXTRA:-}" ] && [ -x "${CLAUDE_STATUSLINE_EXTRA}" ]; then
+  extra=$(printf '%s' "$input" | "$CLAUDE_STATUSLINE_EXTRA" 2>/dev/null)
+  if [ -n "$extra" ]; then
+    printf " \033[2m|${reset} %s" "$extra"
+  fi
+fi
