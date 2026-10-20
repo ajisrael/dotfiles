@@ -100,6 +100,11 @@ in
     # the symlink below.
     python313
 
+    # Replaces a curl-installed uv 0.8.2 in ~/.local/bin (remove that binary and uvx after
+    # rebuild; this profile is earlier on PATH either way). 0.8.2 predates relative
+    # `exclude-newer` ("7 days") and silently rewrites uv.lock files that use it.
+    uv
+
     # GUI apps available as real Nix packages (verified against
     # nixpkgs-26.05-darwin - not just name matches; some same-named
     # nixpkgs attrs are unrelated Linux tools, e.g. `alttab`/`flux`).
