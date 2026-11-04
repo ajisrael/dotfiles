@@ -177,9 +177,7 @@ fi
 # launches the harness; the clone itself is manual, per firstmate's own
 # README:
 #   git clone https://github.com/kunchenguid/firstmate ~/firstmate
-# dotfiles-work defines the matching `fm-work` for the separate
-# ~/firstmate-work clone, kept out of this repo since it must stay
-# employer-agnostic.
+# Any other firstmate clone (and its launcher) belongs outside this repo.
 #
 # `gh auth switch` first: gh has one global active account, not a
 # per-directory one, so anything firstmate shells out to gh-axi/gh for

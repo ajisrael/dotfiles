@@ -25,8 +25,8 @@
       system = "x86_64-darwin";
       # Pooled git-worktree manager for parallel agent work
       # (https://github.com/kunchenguid/treehouse). A pinned buildGoModule
-      # derivation, not a flake input - so its version lives in dotfiles and
-      # propagates to dotfiles-work via git subtree. See pkgs/treehouse.nix
+      # derivation, not a flake input - so its version lives in a tracked file
+      # and survives git-subtree vendoring of this repo. See pkgs/treehouse.nix
       # and docs/adr for why.
       treehousePackage =
         nixpkgs.legacyPackages.${system}.callPackage ./pkgs/treehouse.nix { };

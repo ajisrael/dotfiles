@@ -117,8 +117,8 @@ it never rewrites the submodule's own history.
 
 opencode's MCP server tokens for personal projects live in
 `home/config/opencode/mcp.env.vault`, encrypted with `ansible-vault`. The
-vault password (`~/.vault_pass`, chmod 600) is never committed - both this
-repo's and `dotfiles-work`'s `.gitignore` block it explicitly.
+vault password (`~/.vault_pass`, chmod 600) is never committed - this
+repo's `.gitignore` blocks it explicitly.
 `opencode.json` never contains the tokens - the MCP headers reference them
 via `{env:VAR}` (e.g. `SONARQUBE_MCP_TOKEN`), resolved from the shell
 environment. After decrypting once, `personal.zsh`'s `opencode` alias

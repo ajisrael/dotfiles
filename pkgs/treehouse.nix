@@ -1,10 +1,10 @@
 # Treehouse ships its own flake.nix (unlike no-mistakes), so this could be a
 # flake input. It is a plain buildGoModule derivation instead, on purpose: a
-# flake input's version lives in flake.lock, which the git-subtree vendoring
-# into dotfiles-work does not carry - leaving the two repos' locks to drift.
+# flake input's version lives in flake.lock, which git-subtree vendoring of
+# this repo into another flake does not carry - leaving the locks to drift.
 # Pinning the version here (a file under pkgs/, same as no-mistakes.nix) makes
-# dotfiles the single source of truth that propagates to dotfiles-work
-# through `git subtree pull`. See docs/adr for the decision.
+# this repo the single source of truth, carried along by any
+# `git subtree pull`. See docs/adr for the decision.
 #
 # Build recipe mirrors upstream's own flake.nix output. Bumping the version is
 # a deliberate, reviewed edit: update `version`, then refresh both `hash`

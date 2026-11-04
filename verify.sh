@@ -9,9 +9,8 @@
 # Not a replacement for `nix flake check`/`--dry-run` (those validate the
 # Nix build before you apply it); this validates the result after you did.
 #
-# dotfiles-work's own verify.sh runs this first (checking here, falling
-# back to its vendored vendor/personal/verify.sh copy - same pattern as
-# prune.sh), then layers its work-only checks on top.
+# A repo that vendors this one can run this first and layer its own checks
+# on top.
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -127,12 +126,11 @@ check_symlink() {
   esac
 }
 
-# dotfiles-work's mergeConfigs activation overwrites .zshrc/.tmux.conf/
-# .gitconfig/.ssh/config/CLAUDE.md/AGENTS.md/INSTALLATIONS.md with merged
-# (personal+work) plain files right after this repo's own activation plants
-# them as live symlinks - so this repo's own verify.sh can't assert those
-# five stay symlinks on a machine with dotfiles-work installed. Only
-# assert the ones no downstream repo overwrites.
+# A downstream repo may overwrite .zshrc/.tmux.conf/.gitconfig/.ssh/config/
+# CLAUDE.md/AGENTS.md/INSTALLATIONS.md with merged plain files right after
+# this repo's own activation plants them as live symlinks - so this script
+# can't assert those stay symlinks. Only assert the ones no downstream repo
+# overwrites.
 check_symlink "~/.zprofile" "*home/zsh/zprofile"
 check_symlink "~/.hammerspoon/init.lua" "*home/hammerspoon/init.lua"
 # home.file's source is pkgs.python313 directly (not this repo's own

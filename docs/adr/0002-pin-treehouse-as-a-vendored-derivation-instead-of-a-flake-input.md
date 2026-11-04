@@ -8,21 +8,20 @@ Accepted
 
 ## Context
 
-Treehouse was a flake input in both `dotfiles` and `dotfiles-work`. A flake
-input's version lives in that flake's `flake.lock`, which the `git subtree`
-vendoring of `dotfiles` into `dotfiles-work/vendor/personal` does not carry -
-so the two repos' locks drifted independently.
+Treehouse was a flake input. A flake input's version lives in that flake's
+`flake.lock`, which a `git subtree` vendoring of this repo into another flake
+does not carry - so a consuming repo's lock drifts independently of this one.
 
 ## Decision
 
 Consume treehouse as a pinned `buildGoModule` derivation
 (`pkgs/treehouse.nix`, mirroring `pkgs/no-mistakes.nix`) instead of a flake
-input. The version lives in `dotfiles` and propagates to `dotfiles-work`
-through `git subtree pull`, matching how no-mistakes is already handled.
+input. The version lives in a tracked file here and propagates through any
+`git subtree pull` of this repo, matching how no-mistakes is already handled.
 
 ## Consequences
 
-One source of truth for the version; no more lock drift between the two repos.
+One source of truth for the version; no lock drift for subtree consumers.
 We give up `nix flake update treehouse` - bumping now means editing the
 version and refreshing `hash` + `vendorHash` by hand. We prioritized version
 consistency and maintainability over that flake-update convenience.
