@@ -274,6 +274,45 @@ else
   rm -f "$ts_err"
 fi
 
+section "tmux-sessionizer config layout (windows and '# pane:' splits)"
+
+# Lays a fixture config out with the installed lib on a throwaway tmux
+# server whose panes run `cat` - typed commands are echoed, never run - and
+# compares the windows and panes it produced with the expected layout.
+sessionizer_lib="$(dirname "${sessionizer_bin:-/nonexistent}")/tmux-sessionizer-lib.sh"
+if [ ! -r "$sessionizer_lib" ]; then
+  fail "tmux-sessionizer-lib.sh not found next to tmux-sessionizer, skipping layout check"
+else
+  tl_root="$(mktemp -d /tmp/verify-sessionizer-layout.XXXXXX)"
+  mkdir -p "$tl_root/project/sub"
+  printf '%s\n' '# name: one' 'echo a' '---' '# name: two' '# pane: title=main' 'echo b' \
+    '# pane: right 25% dir=sub title=side' 'echo c' '# pane: below' 'echo d' \
+    > "$tl_root/project/.tmux-sessionizer-config"
+  printf '%s\n' 'set -g default-command cat' 'set -g base-index 1' > "$tl_root/tmux.conf"
+  layout="$(
+    export TMUX_TMPDIR="$tl_root"
+    unset TMUX
+    tmux -f "$tl_root/tmux.conf" new-session -d -s layout -c "$tl_root/project" -x 200 -y 50 || exit 1
+    # shellcheck disable=SC1090
+    source "$sessionizer_lib"
+    apply_session_config layout "$tl_root/project" 2>&1
+    tmux list-windows -t layout -F 'window #{window_index} #{window_name} panes=#{window_panes}'
+    tmux list-panes -t layout:2 -F 'pane #{pane_width} #{b:pane_current_path} title=#{pane_title} active=#{pane_active}'
+    tmux kill-session -t layout
+  )"
+  expected_layout="window 1 one panes=1
+window 2 two panes=3
+pane 149 project title=main active=1
+pane 50 sub title=side active=0
+pane 50 project title= active=0"
+  if [ "$layout" = "$expected_layout" ]; then
+    pass "sessionizer lays out windows, right/below splits, sizes, dirs and titles as configured"
+  else
+    fail "sessionizer layout differs from expected - got: $(tr '\n' ';' <<< "$layout")"
+  fi
+  rm -rf "$tl_root"
+fi
+
 # CHECK_SECTIONS_MARKER
 
 printf "\n${grn}%d passed${end}, ${yel}%d warned${end}, ${red}%d failed${end}\n" "$pass_count" "$warn_count" "$fail_count"

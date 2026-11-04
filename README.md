@@ -76,6 +76,29 @@ after the first scheduled run to confirm it actually freed space
 - `prune.sh` - deletes old system/home-manager generations and garbage
   collects the store (see "Pruning old generations" above).
 
+## tmux-sessionizer session layouts
+
+`tmux-sessionizer` (tmux `PREFIX+f`) opens a new session from the
+project's own `.tmux-sessionizer-config`, falling back to
+`home/tmux-scripts/.default-tmux-sessionizer-config`. Run
+`tmux-sessionizer-config` in a project to create one from the default and
+edit it. Each `---`-separated block is a window. `# name:` names it,
+the other lines are commands typed into its shell, and `# pane:` lines split
+it into more panes:
+
+```
+# name: services
+# pane: dir=web title=web
+./dev.sh
+# pane: right 40% title=listener
+./listener
+# pane: below dir=logs title=log
+tail -f app.log
+```
+
+The header of `home/tmux-scripts/tmux-sessionizer-lib.sh` is the full
+reference.
+
 ## Updating the neovim config
 
 `home/config/nvim` (ajisrael's kickstart.nvim fork) is a git submodule with
