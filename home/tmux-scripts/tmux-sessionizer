@@ -3,13 +3,37 @@
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/tmux-sessionizer-lib.sh"
 
+# Where to look for projects. A machine can override the default list with
+# ${XDG_CONFIG_HOME:-~/.config}/tmux-sessionizer/search-dirs, one entry per
+# line: "<dir>/*" offers each subdirectory of <dir>, a plain "<dir>" offers
+# that directory itself. A leading ~ expands to $HOME; blank lines and lines
+# starting with # are ignored; entries that don't exist are skipped.
+search_dirs_file="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-sessionizer/search-dirs"
+# shellcheck disable=SC2088  # literal ~, expanded by list_candidates
+default_search_dirs='~/code/*
+~/learning/*
+~/dotfiles
+~/firstmate'
+
+list_candidates() {
+	local entry path
+	while IFS= read -r entry || [[ -n $entry ]]; do
+		[[ $entry =~ ^[[:space:]]*(#|$) ]] && continue
+		path="${entry/#\~/$HOME}"
+		if [[ $path == */\* ]]; then
+			find "${path%/\*}" -mindepth 1 -maxdepth 1 -type d 2> /dev/null || true
+		elif [[ -d $path ]]; then
+			printf '%s\n' "$path"
+		fi
+	done
+}
+
 # search for project directory
-selected=$(
-	{
-		find ~/code ~/learning -mindepth 1 -maxdepth 1 -type d 
-		printf '%s\n' ~/dotfiles
-		printf '%s\n' ~/firstmate
-	} | fzf)
+if [[ -r $search_dirs_file ]]; then
+	selected=$(list_candidates < "$search_dirs_file" | fzf)
+else
+	selected=$(list_candidates <<< "$default_search_dirs" | fzf)
+fi
 
 # if we did not select a directory then exit
 if [[ -z $selected ]]; then
