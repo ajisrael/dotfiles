@@ -12,10 +12,26 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
+# Optional per-machine hook, before oh-my-zsh loads: a machine whose
+# oh-my-zsh/theme/plugins live elsewhere (e.g. distro packages) overrides
+# ZSH, ZSH_CUSTOM, ZSH_CACHE_DIR, plugins, ... here. Absent on the Mac.
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/pre-omz.zsh" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/pre-omz.zsh"
+
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
-source "$HOME/dotfiles/home/zsh/personal.zsh"
+# User configuration - personal.zsh next to this file's real location (the
+# repo checkout, or a copy vendored elsewhere), falling back to the Mac's
+# checkout when ~/.zshrc is a plain (merged) file rather than a symlink.
+__zshrc_dir="${${(%):-%x}:A:h}"
+if [[ -r "$__zshrc_dir/personal.zsh" ]]; then
+  source "$__zshrc_dir/personal.zsh"
+else
+  source "$HOME/dotfiles/home/zsh/personal.zsh"
+fi
+unset __zshrc_dir
+
+# Optional per-machine overlay, after the shared config (absent on the Mac).
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/local.zsh" ]] && source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/local.zsh"
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
