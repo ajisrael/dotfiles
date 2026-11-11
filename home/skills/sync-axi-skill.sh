@@ -29,13 +29,13 @@ fi
 
 mkdir -p "$dest_dir"
 sed -E \
-  -e "s#You do not need ${pkg} installed globally - invoke it with \`npx -y ${pkg}([^\`]*)\`\.#${pkg} is installed globally and pinned to an exact version by dotfiles (see ~/.claude/plans/memoized-mixing-quilt.md) - invoke it directly with \`${pkg}\1\`.#g" \
+  -e "s#You do not need ${pkg} installed globally - invoke it with \`npx -y ${pkg}([^\`]*)\`\.#${pkg} is installed globally and pinned to an exact version by dotfiles' home/skills/install-axi-family.sh - invoke it directly with \`${pkg}\1\`.#g" \
   -e "/^When using \`npx -y ${pkg}\`, npx already resolves the package on demand\.\$/d" \
   -e "s#npx -y ${pkg}#${pkg}#g" \
   "$src" > "${dest_dir}/SKILL.md"
 
 # Upstream's skill text tells the agent to run `<pkg> update` to self-update
-# via npm. That would bypass the version pin in dotfiles's home.nix
+# via npm. That would bypass the version pin in install-axi-family.sh
 # until the next `./rebuild.sh` silently reinstalls the pinned version over
 # it - a confusing, temporary drift. Override that instruction explicitly.
 cat >> "${dest_dir}/SKILL.md" <<EOF
@@ -43,9 +43,10 @@ cat >> "${dest_dir}/SKILL.md" <<EOF
 ## Version pinning on this machine
 
 Do not run \`${pkg} update\` - it self-updates via npm and would drift from
-the version pinned in dotfiles's \`home.nix\`, until the next
-\`./rebuild.sh\` silently reinstalls the pinned version over it. To upgrade,
-tell the user to bump the pinned version in \`home.nix\` and run
-\`./rebuild.sh\` - that regenerates this skill file to match automatically.
+the version pinned in dotfiles' \`home/skills/install-axi-family.sh\`, until
+the next \`./rebuild.sh\` silently reinstalls the pinned version over it. To
+upgrade, tell the user to bump the pinned version in
+\`home/skills/install-axi-family.sh\` and run \`./rebuild.sh\` - that
+regenerates this skill file to match automatically.
 \`${pkg} update --check\` (read-only, does not install) is still fine to run.
 EOF
