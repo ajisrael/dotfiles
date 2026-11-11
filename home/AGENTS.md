@@ -4,6 +4,12 @@
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
 - Never run `tmux kill-server` (or any command that tears down the whole tmux
   server, e.g. `killall tmux`).
+- Never `pkill -f`/`killall` a daemon by pattern: the pattern matches the agent's
+  own shell command line (kills the session) and can match unrelated instances
+  of the same binary (e.g. killing a test daemon also killed the user's
+  production daemon). Instead, resolve the exact PID with `pgrep -af` plus
+  distinguishing context (cwd, port, env) and kill that PID only. Verify with
+  `curl` health checks afterwards.
 - When working in a project that has a remote repository, unless specified otherwise, never write full system paths.
   Especially ones that contain the username. Paths should be relative to the project to allow
   for consistency when being used by others.
