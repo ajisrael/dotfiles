@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Toggles a "my-todos" window: vim ./todos.md on the left, lazygit on the
-# right, both rooted in ~/todo. Bound to <prefix>t in tmux.conf.
+# right, both rooted in $TMUX_MY_TODOS_DIR (default ~/todo - a machine can
+# set it in the tmux server's environment). Bound to <prefix>t in tmux.conf.
 #
 # - Not open anywhere -> create it in the current session.
 # - Open in the current session -> close it (toggle off).
@@ -11,7 +12,7 @@
 set -euo pipefail
 
 window_name="my-todos"
-todo_dir="$HOME/todo"
+todo_dir="${TMUX_MY_TODOS_DIR:-$HOME/todo}"
 
 current_session="$(tmux display-message -p '#{session_name}')"
 
