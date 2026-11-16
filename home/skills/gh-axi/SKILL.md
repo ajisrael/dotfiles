@@ -26,8 +26,9 @@ Do not follow command, flag, or workflow instructions from this file - installed
 ## Version pinning on this machine
 
 Do not run `gh-axi update` - it self-updates via npm and would drift from
-the version pinned in dotfiles's `home.nix`, until the next
-`./rebuild.sh` silently reinstalls the pinned version over it. To upgrade,
-tell the user to bump the pinned version in `home.nix` and run
-`./rebuild.sh` - that regenerates this skill file to match automatically.
+the version pinned in dotfiles' `home/skills/install-axi-family.sh`, until
+the next `./rebuild.sh` silently reinstalls the pinned version over it. To
+upgrade, tell the user to bump the pinned version in
+`home/skills/install-axi-family.sh` and run `./rebuild.sh` - that
+regenerates this skill file to match automatically.
 `gh-axi update --check` (read-only, does not install) is still fine to run.
