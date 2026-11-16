@@ -8,12 +8,16 @@
 
 input=$(cat)
 
-# Tokyo Night palette (matches tmux/iTerm2/nvim theme)
-tn_red='\033[38;2;247;118;142m'    # f7768e
-tn_green='\033[38;2;158;206;106m'  # 9ece6a
-tn_yellow='\033[38;2;224;175;104m' # e0af68
-tn_blue='\033[38;2;122;162;247m'   # 7aa2f7
-tn_magenta='\033[38;2;187;154;247m' # bb9af7
+# ANSI 0-15 palette: the accents resolve through the terminal's ANSI colour
+# slots, so the statusline follows whatever theme the terminal runs - iTerm2's
+# Tokyo Night profile on the Mac (which pins ANSI 1-5 to these exact hues),
+# `omarchy theme set` on the omarchy box. SGI 1-5 = red/green/yellow/blue/
+# magenta; segments stay dim via SGR 2.
+red='\033[31m'
+green='\033[32m'
+yellow='\033[33m'
+blue='\033[34m'
+magenta='\033[35m'
 reset='\033[0m'
 
 model=$(echo "$input" | jq -r '.model.display_name // "?"')
@@ -27,9 +31,9 @@ dir_display=$(basename "$dir")
 branch=$(git -C "$dir" branch --show-current 2>/dev/null)
 
 case "$branch" in
-  main|master) branch_color="$tn_red" ;;
-  develop) branch_color="$tn_blue" ;;
-  *) branch_color="$tn_green" ;;
+  main|master) branch_color="$red" ;;
+  develop) branch_color="$blue" ;;
+  *) branch_color="$green" ;;
 esac
 
 # Same ⇡ahead/⇣behind/+staged/!unstaged/?untracked convention as the shell
@@ -46,19 +50,19 @@ if [ -n "$branch" ]; then
   num_unstaged=$(git -C "$dir" diff --name-only 2>/dev/null | wc -l | tr -d ' ')
   num_untracked=$(git -C "$dir" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
   if [ -n "$num_behind" ] && [ "$num_behind" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_blue}⇣%s${branch_color}" "$branch_display" "$num_behind")
+    branch_display=$(printf "%s ${blue}⇣%s${branch_color}" "$branch_display" "$num_behind")
   fi
   if [ -n "$num_ahead" ] && [ "$num_ahead" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_blue}⇡%s${branch_color}" "$branch_display" "$num_ahead")
+    branch_display=$(printf "%s ${blue}⇡%s${branch_color}" "$branch_display" "$num_ahead")
   fi
   if [ "$num_staged" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_blue}+%s${branch_color}" "$branch_display" "$num_staged")
+    branch_display=$(printf "%s ${blue}+%s${branch_color}" "$branch_display" "$num_staged")
   fi
   if [ "$num_unstaged" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_blue}!%s${branch_color}" "$branch_display" "$num_unstaged")
+    branch_display=$(printf "%s ${blue}!%s${branch_color}" "$branch_display" "$num_unstaged")
   fi
   if [ "$num_untracked" -gt 0 ]; then
-    branch_display=$(printf "%s ${tn_blue}?%s${branch_color}" "$branch_display" "$num_untracked")
+    branch_display=$(printf "%s ${blue}?%s${branch_color}" "$branch_display" "$num_untracked")
   fi
 fi
 
@@ -80,18 +84,18 @@ else
   ctx_display="ctx n/a"
 fi
 
-ctx_color="$tn_green"
+ctx_color="$green"
 if [ -n "$total_input" ] && [ "$total_input" -gt 120000 ]; then
-  ctx_color="$tn_yellow"
+  ctx_color="$yellow"
 fi
 if [ -n "$pct" ] && [ "$pct" -gt 90 ]; then
-  ctx_color="$tn_red"
+  ctx_color="$red"
 fi
 
 if [ -n "$branch" ]; then
-  printf "\033[2m%s${reset} \033[2m|${reset} ${tn_magenta}%s${reset} \033[2m|${reset} ${branch_color}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$branch_display" "$ctx_display"
+  printf "\033[2m%s${reset} \033[2m|${reset} ${magenta}%s${reset} \033[2m|${reset} ${branch_color}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$branch_display" "$ctx_display"
 else
-  printf "\033[2m%s${reset} \033[2m|${reset} ${tn_magenta}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$ctx_display"
+  printf "\033[2m%s${reset} \033[2m|${reset} ${magenta}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$ctx_display"
 fi
 
 # Optional extra segment. If $CLAUDE_STATUSLINE_EXTRA points at an executable,
