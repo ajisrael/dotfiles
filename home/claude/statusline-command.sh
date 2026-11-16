@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Code statusline: model, cwd, and context-window usage.
+# Claude Code statusline: model, cwd, git branch, and context-window usage.
 # Context usage comes straight from the statusline JSON's context_window
 # object (used_percentage / total_input_tokens / context_window_size),
 # which Claude Code computes from the live session transcript. If a
@@ -88,28 +88,10 @@ if [ -n "$pct" ] && [ "$pct" -gt 90 ]; then
   ctx_color="$tn_red"
 fi
 
-cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
-cost_display=""
-cost_color="$tn_green"
-if [ -n "$cost" ]; then
-  cost_display=$(printf '$%.2f' "$cost")
-  cost_over_25=$(echo "$cost" | awk '{print ($1 >= 25)}')
-  cost_over_50=$(echo "$cost" | awk '{print ($1 >= 50)}')
-  if [ "$cost_over_50" = "1" ]; then
-    cost_color="$tn_red"
-  elif [ "$cost_over_25" = "1" ]; then
-    cost_color="$tn_yellow"
-  fi
-fi
-
 if [ -n "$branch" ]; then
   printf "\033[2m%s${reset} \033[2m|${reset} ${tn_magenta}%s${reset} \033[2m|${reset} ${branch_color}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$branch_display" "$ctx_display"
 else
   printf "\033[2m%s${reset} \033[2m|${reset} ${tn_magenta}%s${reset} \033[2m|${reset} ${ctx_color}%s${reset}" "$model" "$dir_display" "$ctx_display"
-fi
-
-if [ -n "$cost_display" ]; then
-  printf " \033[2m|${reset} ${cost_color}%s${reset}" "$cost_display"
 fi
 
 # Optional extra segment. If $CLAUDE_STATUSLINE_EXTRA points at an executable,
